@@ -14,48 +14,46 @@
     * { box-sizing: border-box; }
 
     body {
-      margin: 0;
-      padding: 20px;
-      background: #f4f6f9;
       font-family: -apple-system, BlinkMacSystemFont,
                    "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      padding: 18px;
+      background: #f4f6f9;
       color: #172033;
       text-align: center;
     }
 
     .container {
       max-width: 480px;
-      margin: 0 auto;
+      margin: auto;
     }
 
     h1 {
       font-size: 24px;
-      margin: 12px 0 6px;
+      margin-bottom: 7px;
     }
 
     .subtitle {
       color: #64748b;
       font-size: 14px;
-      margin-bottom: 22px;
     }
 
     .panel {
       background: white;
-      border-radius: 16px;
       padding: 16px;
-      margin-bottom: 15px;
-      box-shadow: 0 4px 16px rgba(0,0,0,.04);
+      border-radius: 15px;
+      margin-top: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,.05);
     }
 
     #reader {
       width: 100%;
       overflow: hidden;
-      border-radius: 12px;
+      border-radius: 10px;
     }
 
     #reader video {
       width: 100%;
-      border-radius: 12px;
     }
 
     input {
@@ -63,26 +61,25 @@
       padding: 14px;
       font-size: 16px;
       border: 1px solid #cbd5e1;
-      border-radius: 10px;
+      border-radius: 9px;
       margin-bottom: 12px;
     }
 
     button {
       width: 100%;
+      padding: 15px;
       border: none;
+      border-radius: 10px;
       background: #2563eb;
       color: white;
-      border-radius: 10px;
-      padding: 15px;
       font-size: 16px;
       font-weight: 600;
-      margin: 5px 0;
+      margin-top: 8px;
       cursor: pointer;
     }
 
     button:disabled {
       opacity: .5;
-      cursor: not-allowed;
     }
 
     .secondary {
@@ -90,10 +87,11 @@
     }
 
     #status {
+      margin-top: 18px;
       padding: 17px;
-      border-radius: 12px;
+      border-radius: 10px;
       font-size: 16px;
-      font-weight: 600;
+      font-weight: bold;
       overflow-wrap: anywhere;
     }
 
@@ -117,31 +115,33 @@
       color: #991b1b;
     }
 
-    #mode {
-      font-size: 12px;
-      font-weight: bold;
-      letter-spacing: .5px;
-      padding: 8px;
-      color: #64748b;
-    }
-
     .small {
       color: #64748b;
       font-size: 12px;
       margin-top: 12px;
     }
+
+    #lastScan {
+      font-size: 13px;
+      color: #475569;
+      margin-top: 10px;
+      overflow-wrap: anywhere;
+    }
   </style>
 </head>
 
 <body>
+
 <div class="container">
 
   <h1>Warehouse Return Scanner</h1>
-  <div class="subtitle">
-    Scan USPS return labels using your phone.
-  </div>
+
+  <p class="subtitle">
+    Scan the long USPS tracking barcode.
+  </p>
 
   <div class="panel">
+
     <input
       id="accessCode"
       type="password"
@@ -149,55 +149,73 @@
       autocomplete="off"
     >
 
-    <div id="mode">WAREHOUSE SCANNER</div>
     <div id="reader"></div>
 
     <button id="startButton" onclick="startCamera()">
       Start Camera
     </button>
 
-    <button class="secondary"
-            onclick="stopCamera()">
+    <button class="secondary" onclick="stopCamera()">
       Stop Camera
     </button>
+
+    <div id="lastScan"></div>
+
   </div>
 
   <div id="status" class="ready">
-    Enter warehouse code and start camera.
+    Enter access code and start camera.
   </div>
 
-  <div class="panel" style="margin-top:18px">
-    <div class="subtitle">
-      Barcode not scanning?
-    </div>
+  <div class="panel">
+
+    <p class="subtitle">
+      Barcode damaged? Enter tracking number manually.
+    </p>
 
     <input
       id="manualBarcode"
-      placeholder="Enter tracking number manually"
+      placeholder="USPS tracking number"
       autocomplete="off"
+      inputmode="numeric"
     >
 
     <button onclick="manualSubmit()">
       Submit Tracking Number
     </button>
+
   </div>
 
   <p class="small">
-    Refunds and exchanges are handled securely by Loop.
+    Scans are saved to Google Sheets.
+    Loop processing runs in the background.
   </p>
 
 </div>
 
 <script>
-  // REPLACE THIS WITH YOUR CLOUDFLARE WORKER URL
-  const API_URL =
-  "https://warehouse-scanner-bridge.rahil-570.workers.dev";
 
-  const scanner = new Html5Qrcode("reader");
+  // CLOUDFLARE WORKER
+  const API_URL =
+    "https://warehouse-scanner-bridge.rahil-570.workers.dev";
+
+  // Only scan linear shipping barcodes.
+  // Ignore QR codes and square 2D barcodes.
+  const scanner = new Html5Qrcode("reader", {
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.ITF
+    ],
+    useBarCodeDetectorIfSupported: true,
+    verbose: false
+  });
 
   let cameraRunning = false;
+  let cameraStarting = false;
   let busy = false;
   let audioContext = null;
+  let restartTimer = null;
 
   const statusEl = document.getElementById("status");
   const startButton = document.getElementById("startButton");
@@ -207,74 +225,115 @@
     statusEl.textContent = message;
   }
 
-  function playBeep(frequency) {
+  function playBeep(frequency, duration = 0.15) {
     try {
-      const Audio = window.AudioContext ||
-                    window.webkitAudioContext;
+      const AudioClass =
+        window.AudioContext ||
+        window.webkitAudioContext;
 
       if (!audioContext) {
-        audioContext = new Audio();
+        audioContext = new AudioClass();
       }
 
       if (audioContext.state === "suspended") {
         audioContext.resume();
       }
 
-      const osc = audioContext.createOscillator();
+      const oscillator = audioContext.createOscillator();
       const gain = audioContext.createGain();
 
-      osc.connect(gain);
+      oscillator.connect(gain);
       gain.connect(audioContext.destination);
 
-      osc.frequency.value = frequency;
-      gain.gain.value = 0.12;
+      oscillator.frequency.value = frequency;
+      gain.gain.value = 0.1;
 
-      osc.start();
-      osc.stop(audioContext.currentTime + .15);
-    } catch (_) {}
+      oscillator.start();
+      oscillator.stop(
+        audioContext.currentTime + duration
+      );
+
+    } catch (error) {
+      // Audio is optional.
+    }
+  }
+
+  // Accept this warehouse's USPS tracking format:
+  // 22 digits starting with 9.
+  //
+  // The long barcode may contain 420 + ZIP routing
+  // information before the actual tracking number.
+  //
+  // We deliberately send the original scanned barcode
+  // to Apps Script, which already handles matching.
+
+  function extractUspsTracking(value) {
+    const raw = String(value || "").trim();
+
+    // Reject binary data, letters and control characters.
+    if (!/^[0-9\s]+$/.test(raw)) {
+      return null;
+    }
+
+    const digits = raw.replace(/\s/g, "");
+
+    // Standard printed 22-digit tracking number.
+    if (/^9\d{21}$/.test(digits)) {
+      return digits;
+    }
+
+    // Full USPS barcode with 420 routing prefix.
+    // Accept only the 22-digit tracking suffix.
+    if (
+      digits.startsWith("420") &&
+      (digits.length === 30 || digits.length === 34)
+    ) {
+      const tracking = digits.slice(-22);
+
+      if (/^9\d{21}$/.test(tracking)) {
+        return tracking;
+      }
+    }
+
+    return null;
   }
 
   async function startCamera() {
-    if (busy || cameraRunning) return;
+    if (busy || cameraRunning || cameraStarting) return;
 
-    if (!document.getElementById("accessCode").value.trim()) {
-      showStatus("error", "Enter your warehouse access code.");
+    clearTimeout(restartTimer);
+
+    const accessCode = document.getElementById("accessCode")
+      .value.trim();
+
+    if (!accessCode) {
+      showStatus(
+        "error",
+        "Enter warehouse access code first."
+      );
       return;
     }
 
+    cameraStarting = true;
     startButton.disabled = true;
 
     try {
-      if (audioContext &&
-          audioContext.state === "suspended") {
-        await audioContext.resume();
-      }
-
-     
-await scanner.start(
-  { facingMode: "environment" },
-  {
-    fps: 15,
-    aspectRatio: 1.777778,
-    disableFlip: true,
-    formatsToSupport: [
-      Html5QrcodeSupportedFormats.CODE_128,
-      Html5QrcodeSupportedFormats.CODE_39,
-      Html5QrcodeSupportedFormats.ITF,
-      Html5QrcodeSupportedFormats.QR_CODE,
-      Html5QrcodeSupportedFormats.DATA_MATRIX
-    ]
-  },
-  onScanSuccess,
-  function() {}
-);
-
+      await scanner.start(
+        { facingMode: "environment" },
+        {
+          fps: 15,
+          aspectRatio: 1.777778,
+          disableFlip: true
+        },
+        onScanSuccess,
+        function() {}
+      );
 
       cameraRunning = true;
 
       showStatus(
         "ready",
-        "Camera active. Position the barcode in the frame."
+        "Scanner ready. Point at the long USPS barcode."
       );
 
     } catch (error) {
@@ -282,128 +341,144 @@ await scanner.start(
         "error",
         "Camera error: " + error.message
       );
+
     } finally {
+      cameraStarting = false;
       startButton.disabled = false;
     }
   }
 
   async function stopCamera() {
+    clearTimeout(restartTimer);
+
     if (!cameraRunning) return;
 
     try {
       await scanner.stop();
-    } catch (_) {}
+    } catch (error) {}
 
     cameraRunning = false;
   }
 
-  function onScanSuccess(text) {
+  // Ignore unrelated barcodes without stopping camera.
+  function onScanSuccess(decodedText) {
     if (busy) return;
-    submitBarcode(text);
-  }
 
-  function manualSubmit() {
-    const text = document.getElementById("manualBarcode")
-      .value.trim();
+    const tracking = extractUspsTracking(decodedText);
 
-    if (!text) {
-      showStatus("error", "Enter a tracking number.");
+    if (!tracking) {
+      // Ignore 2D data or unrelated barcode formats.
       return;
     }
 
-    submitBarcode(text);
+    document.getElementById("lastScan").textContent =
+      "Tracking detected: " + tracking;
+
+    submitBarcode(decodedText);
   }
 
-  
-async function submitBarcode(barcode) {
-  if (busy) return;
+  function manualSubmit() {
+    const input = document.getElementById("manualBarcode");
+    const value = input.value.trim();
 
-  busy = true;
+    const tracking = extractUspsTracking(value);
 
-  const accessCode = document.getElementById("accessCode")
-    .value.trim();
-
-  if (!accessCode) {
-    showStatus("error", "Warehouse access code required.");
-    busy = false;
-    return;
-  }
-
-  // Instant feedback when a barcode is detected.
-  playBeep(850);
-
-  showStatus(
-    "loading",
-    "Barcode detected. Saving scan..."
-  );
-
-  await stopCamera();
-
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      cache: "no-store",
-      body: JSON.stringify({
-        barcode: barcode,
-        accessCode: accessCode
-      })
-    });
-
-    const result = await response.json();
-
-    if (!response.ok || !result.ok) {
-      playBeep(230);
-
+    if (!tracking) {
       showStatus(
         "error",
-        result.message || "Scan was not accepted."
+        "Enter a valid 22-digit USPS tracking number."
       );
+      return;
+    }
 
+    submitBarcode(tracking);
+  }
+
+  async function submitBarcode(barcode) {
+    if (busy) return;
+
+    busy = true;
+
+    const accessCode = document.getElementById("accessCode")
+      .value.trim();
+
+    if (!accessCode) {
+      showStatus(
+        "error",
+        "Warehouse access code required."
+      );
       busy = false;
       return;
     }
 
-    playBeep(1100);
-
-    if (result.dryRun) {
-      showStatus(
-        "success",
-        result.message
-      );
-    } else {
-      showStatus(
-        "success",
-        "SCAN ACCEPTED - " +
-        result.orderName +
-        ". Saved for background processing."
-      );
-    }
-
-    document.getElementById("manualBarcode").value = "";
-
-    // Release scanner without waiting for Loop processing.
-    busy = false;
-
-    // Automatically restart the camera for the next package.
-    setTimeout(function() {
-      startCamera();
-    }, 1200);
-
-  } catch (error) {
-    playBeep(230);
+    playBeep(850);
 
     showStatus(
-      "error",
-      "Connection error. Scan not confirmed. " +
-      "Check Return Scans before trying again."
+      "loading",
+      "Barcode detected. Saving scan..."
     );
 
-    busy = false;
+    await stopCamera();
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        cache: "no-store",
+        body: JSON.stringify({
+          barcode: barcode,
+          accessCode: accessCode
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.ok) {
+        playBeep(230, 0.3);
+
+        showStatus(
+          "error",
+          result.message || "Scan not accepted."
+        );
+
+        busy = false;
+        return;
+      }
+
+      playBeep(1100);
+
+      showStatus(
+        "success",
+        result.dryRun
+          ? result.message
+          : "SCAN ACCEPTED - Order " +
+            result.orderName +
+            ". Saved for background processing."
+      );
+
+      document.getElementById("manualBarcode").value = "";
+
+      busy = false;
+
+      // Automatically prepare for the next package
+      // after Google Sheets confirms the scan was saved.
+      restartTimer = setTimeout(function() {
+        startCamera();
+      }, 1200);
+
+    } catch (error) {
+      playBeep(230, 0.3);
+
+      showStatus(
+        "error",
+        "Connection error. Check Return Scans before retrying."
+      );
+
+      busy = false;
+    }
   }
-}
 
 </script>
 </body>
