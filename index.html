@@ -314,69 +314,97 @@ await scanner.start(
     submitBarcode(text);
   }
 
-  async function submitBarcode(barcode) {
-    if (busy) return;
+  
+async function submitBarcode(barcode) {
+  if (busy) return;
 
-    busy = true;
+  busy = true;
 
-    const accessCode = document.getElementById("accessCode")
-      .value.trim();
+  const accessCode = document.getElementById("accessCode")
+    .value.trim();
 
-    if (!accessCode) {
-      showStatus("error", "Warehouse access code required.");
-      busy = false;
-      return;
-    }
+  if (!accessCode) {
+    showStatus("error", "Warehouse access code required.");
+    busy = false;
+    return;
+  }
 
-    playBeep(850);
+  // Instant feedback when a barcode is detected.
+  playBeep(850);
 
-    showStatus(
-      "loading",
-      "Barcode detected. Checking return in Loop..."
-    );
+  showStatus(
+    "loading",
+    "Barcode detected. Saving scan..."
+  );
 
-    await stopCamera();
+  await stopCamera();
 
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        cache: "no-store",
-        body: JSON.stringify({
-          barcode: barcode,
-          accessCode: accessCode
-        })
-      });
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      cache: "no-store",
+      body: JSON.stringify({
+        barcode: barcode,
+        accessCode: accessCode
+      })
+    });
 
-      const result = await response.json();
+    const result = await response.json();
 
-      if (result.ok) {
-        playBeep(1100);
-        showStatus("success", result.message);
-      } else {
-        playBeep(230);
-        showStatus("error", result.message);
-      }
-
-    } catch (_) {
+    if (!response.ok || !result.ok) {
       playBeep(230);
 
       showStatus(
         "error",
-        "Connection error. Check the Google Sheet before " +
-        "attempting this return again."
+        result.message || "Scan was not accepted."
+      );
+
+      busy = false;
+      return;
+    }
+
+    playBeep(1100);
+
+    if (result.dryRun) {
+      showStatus(
+        "success",
+        result.message
+      );
+    } else {
+      showStatus(
+        "success",
+        "SCAN ACCEPTED - " +
+        result.orderName +
+        ". Saved for background processing."
       );
     }
 
     document.getElementById("manualBarcode").value = "";
 
+    // Release scanner without waiting for Loop processing.
     busy = false;
 
-    // Camera remains stopped so the result can be reviewed.
-    // Tap Start Camera to scan the next package.
+    // Automatically restart the camera for the next package.
+    setTimeout(function() {
+      startCamera();
+    }, 1200);
+
+  } catch (error) {
+    playBeep(230);
+
+    showStatus(
+      "error",
+      "Connection error. Scan not confirmed. " +
+      "Check Return Scans before trying again."
+    );
+
+    busy = false;
   }
+}
+
 </script>
 </body>
 </html>
