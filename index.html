@@ -250,20 +250,25 @@
         await audioContext.resume();
       }
 
-      await scanner.start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: function(width, height) {
-            return {
-              width: Math.min(280, Math.floor(width * .85)),
-              height: Math.min(140, Math.floor(height * .6))
-            };
-          }
-        },
-        onScanSuccess,
-        function() {}
-      );
+     
+await scanner.start(
+  { facingMode: "environment" },
+  {
+    fps: 15,
+    aspectRatio: 1.777778,
+    disableFlip: true,
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.ITF,
+      Html5QrcodeSupportedFormats.QR_CODE,
+      Html5QrcodeSupportedFormats.DATA_MATRIX
+    ]
+  },
+  onScanSuccess,
+  function() {}
+);
+
 
       cameraRunning = true;
 
