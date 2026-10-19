@@ -4,9 +4,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover">
+      content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220">
-<title>Warehouse Scanner V2</title>
+<title>Warehouse Scanner V2.1</title>
 
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
@@ -160,6 +160,8 @@ input:focus-visible {
   color:#1d4ed8;
 }
 
+/* CAMERA */
+
 .scanner-shell {
   position:relative;
   background:#0b1220;
@@ -221,29 +223,36 @@ input:focus-visible {
   width:32px;
   height:32px;
   border:0 solid #38bdf8;
-  transition:border-color .2s;
+  transition:border-color .18s ease;
 }
 
 .tl {
-  top:0;left:0;
+  top:0;
+  left:0;
   border-top-width:4px;
   border-left-width:4px;
   border-radius:9px 0 0 0;
 }
+
 .tr {
-  top:0;right:0;
+  top:0;
+  right:0;
   border-top-width:4px;
   border-right-width:4px;
   border-radius:0 9px 0 0;
 }
+
 .bl {
-  bottom:0;left:0;
+  bottom:0;
+  left:0;
   border-bottom-width:4px;
   border-left-width:4px;
   border-radius:0 0 0 9px;
 }
+
 .br {
-  bottom:0;right:0;
+  bottom:0;
+  right:0;
   border-bottom-width:4px;
   border-right-width:4px;
   border-radius:0 0 9px 0;
@@ -265,6 +274,8 @@ input:focus-visible {
   to { transform:translateY(113px); }
 }
 
+/* Keep the scanning animation moving at all times. */
+
 .scanner-shell.detected .corner {
   border-color:#f59e0b;
 }
@@ -274,9 +285,16 @@ input:focus-visible {
   box-shadow:0 0 12px #f59e0b;
 }
 
-.scanner-shell.saving .scan-line {
-  animation-play-state:paused;
+.scanner-shell.accepted .corner {
+  border-color:#22c55e;
 }
+
+.scanner-shell.accepted .scan-line {
+  background:#22c55e;
+  box-shadow:0 0 12px #22c55e;
+}
+
+/* FEEDBACK FLASH */
 
 .flash {
   position:absolute;
@@ -312,12 +330,23 @@ input:focus-visible {
   color:white;
 }
 
+/* SCANNING GUIDANCE */
+
 .scanner-hint {
   text-align:center;
   font-size:12px;
   color:var(--muted);
-  margin:11px 0 0;
+  margin:12px 0 0;
+  min-height:20px;
+  transition:color .2s ease;
 }
+
+.scanner-hint.tip {
+  color:#1d4ed8;
+  font-weight:600;
+}
+
+/* STATUS */
 
 .status {
   display:flex;
@@ -416,13 +445,16 @@ input:focus-visible {
   color:#166534;
 }
 
-.hidden { display:none !important; }
+.hidden {
+  display:none !important;
+}
 
 @media (prefers-reduced-motion:reduce) {
   .scan-line {
     animation:none;
     top:50%;
   }
+
   .flash.success,
   .flash.error {
     animation:none;
@@ -437,7 +469,7 @@ input:focus-visible {
 
 <header>
   <div>
-    <h1>Warehouse Scanner V2</h1>
+    <h1>Warehouse Scanner V2.1</h1>
     <p class="subtitle">USPS Return Processing</p>
     <span class="mode">HIGH-SPEED MODE</span>
   </div>
@@ -460,7 +492,6 @@ input:focus-visible {
 </section>
 
 <section class="panel">
-
   <div class="scanner-shell" id="scannerShell">
 
     <div class="camera-placeholder" id="cameraPlaceholder">
@@ -484,47 +515,58 @@ input:focus-visible {
     </div>
   </div>
 
-  <p class="scanner-hint">
+  <p class="scanner-hint" id="scannerHint">
     Align the long USPS barcode inside the frame.
   </p>
 
   <div class="controls">
-    <button class="primary"
-            id="startButton"
-            onclick="startCamera()">
+    <button
+      class="primary"
+      id="startButton"
+      onclick="startCamera()">
       Start Camera
     </button>
 
-    <button class="secondary"
-            onclick="stopCamera()">
+    <button
+      class="secondary"
+      id="stopButton"
+      onclick="stopCamera()">
       Stop Camera
     </button>
   </div>
 
   <div class="options">
-    <button class="option-btn on"
-            id="soundButton"
-            onclick="toggleSound()">
+    <button
+      class="option-btn on"
+      id="soundButton"
+      onclick="toggleSound()">
       🔊 Sound On
     </button>
 
-    <button class="option-btn"
-            id="torchButton"
-            onclick="toggleTorch()">
+    <button
+      class="option-btn"
+      id="torchButton"
+      onclick="toggleTorch()">
       Flashlight
     </button>
   </div>
 </section>
 
-<section class="status ready" id="status"
-         role="status" aria-live="polite">
+<section
+  class="status ready"
+  id="status"
+  role="status"
+  aria-live="polite">
+
   <div class="status-icon" id="statusIcon">◎</div>
+
   <div>
     <div class="status-title" id="statusTitle">
       Ready to Scan
     </div>
+
     <div class="status-detail" id="statusDetail">
-      Enter warehouse access code and start camera.
+      Enter access code and start camera.
     </div>
   </div>
 </section>
@@ -545,16 +587,18 @@ input:focus-visible {
     autocomplete="off"
   >
 
-  <button class="primary manual-button"
-          onclick="manualSubmit()">
+  <button
+    class="primary manual-button"
+    id="manualButton"
+    onclick="manualSubmit()">
     Submit Tracking Number
   </button>
 </section>
 
 <p class="note">
   A successful scan means Google Sheets accepted the
-  return for background processing. Final processing
-  results are tracked separately in Google Sheets.
+  return for background processing. Final refund
+  or exchange results are tracked separately.
 </p>
 
 </div>
@@ -569,7 +613,7 @@ input:focus-visible {
 const API_URL =
   "https://warehouse-scanner-bridge.rahil-570.workers.dev";
 
-// Focus exclusively on the long USPS barcode.
+// Decode the long USPS Code 128 barcode.
 const scanner = new Html5Qrcode("reader", {
   formatsToSupport: [
     Html5QrcodeSupportedFormats.CODE_128
@@ -578,36 +622,44 @@ const scanner = new Html5Qrcode("reader", {
   verbose: false
 });
 
-// Controls the speed of restarting decoding.
-const RESUME_DELAY_MS = 950;
-
-// Avoid repeatedly accepting the identical label
-// immediately after a successful scan.
-const SAME_BARCODE_COOLDOWN_MS = 10000;
-
-// Ask the library to attempt up to 20 scans per second.
-// Actual speed depends on device capability.
 const SCANNER_FPS = 20;
+
+// Short visual acknowledgement, without pausing
+// the video or barcode decoder.
+const SUCCESS_FEEDBACK_MS = 650;
+
+// Ignore the same successfully saved tracking number
+// for a short period, reducing accidental re-scans.
+const SAME_BARCODE_COOLDOWN_MS = 15000;
+
+const DEFAULT_HINT =
+  "Align the long USPS barcode inside the frame.";
 
 let cameraRunning = false;
 let cameraStarting = false;
-let scannerPaused = false;
+let stoppingCamera = false;
+
 let busy = false;
+let scanArmed = true;
 let soundEnabled = true;
 let torchEnabled = false;
 let audioContext = null;
-let resumeTimer = null;
 let acceptedScans = 0;
 
 let lastAcceptedTracking = "";
 let lastAcceptedTime = 0;
+
+let hintTimer = null;
+let readyTimer = null;
+let hintStartedAt = 0;
+let hintText = "";
 
 const $ = id => document.getElementById(id);
 const shell = $("scannerShell");
 
 
 /****************************************************
- STATUS DISPLAY
+ DISPLAY HELPERS
 ****************************************************/
 
 function showStatus(type, title, detail) {
@@ -625,9 +677,83 @@ function showStatus(type, title, detail) {
   $("statusIcon").textContent = icons[type] || "◎";
 }
 
+function showHint(text, isTip = false) {
+  if (hintText === text &&
+      $("scannerHint").classList.contains("tip") === isTip) {
+    return;
+  }
+
+  hintText = text;
+  $("scannerHint").textContent = text;
+  $("scannerHint").classList.toggle("tip", isTip);
+}
+
+function updateCounter() {
+  $("scanCount").textContent = acceptedScans;
+}
+
+function updateLastScan(tracking, order) {
+  $("lastScan").textContent =
+    tracking + (order ? " | Order " + order : "");
+}
+
 
 /****************************************************
- AUDIO FEEDBACK
+ SMART SCANNING GUIDANCE
+
+ Suggestions are based on elapsed time only.
+ They do not claim to measure focus or distance.
+****************************************************/
+
+function stopHints() {
+  if (hintTimer !== null) {
+    clearInterval(hintTimer);
+    hintTimer = null;
+  }
+}
+
+function startHints() {
+  stopHints();
+
+  hintStartedAt = Date.now();
+  showHint(DEFAULT_HINT);
+
+  hintTimer = setInterval(() => {
+    if (!cameraRunning || !scanArmed || busy ||
+        document.hidden) {
+      return;
+    }
+
+    const seconds =
+      (Date.now() - hintStartedAt) / 1000;
+
+    if (seconds < 5) {
+      showHint(DEFAULT_HINT);
+
+    } else if (seconds < 11) {
+      showHint(
+        "Try moving closer or adjusting the angle.",
+        true
+      );
+
+    } else if (seconds < 17) {
+      showHint(
+        "Move back slightly to fit the full barcode.",
+        true
+      );
+
+    } else {
+      // Repeat useful suggestions without accumulating
+      // multiple independent timers.
+      hintStartedAt = Date.now();
+      showHint(DEFAULT_HINT);
+    }
+  }, 500);
+}
+
+
+/****************************************************
+ AUDIO
 ****************************************************/
 
 function getAudioContext() {
@@ -678,11 +804,13 @@ function tone(frequency, duration, delay = 0) {
     osc.start(start);
     osc.stop(start + duration + 0.02);
 
-  } catch (_) {}
+  } catch (_) {
+    // Audio is optional.
+  }
 }
 
 function detectionSound() {
-  tone(880, 0.10);
+  tone(880, 0.1);
 }
 
 function successSound() {
@@ -713,7 +841,7 @@ function toggleSound() {
 
 
 /****************************************************
- VIBRATION - ANDROID WHERE SUPPORTED
+ VIBRATION
 ****************************************************/
 
 function vibrate(pattern) {
@@ -726,7 +854,7 @@ function vibrate(pattern) {
 
 
 /****************************************************
- VISUAL EFFECTS
+ GREEN/RED FLASH
 ****************************************************/
 
 function flash(type) {
@@ -741,30 +869,24 @@ function flash(type) {
   element.classList.add(type);
 }
 
-function updateCounter() {
-  $("scanCount").textContent = acceptedScans;
-}
-
 
 /****************************************************
- USPS BARCODE VALIDATION
-
- This warehouse uses 22-digit tracking numbers.
- Supports the observed USPS 420-prefixed barcodes.
+ USPS TRACKING VALIDATION
 ****************************************************/
 
 function extractUspsTracking(value) {
   const raw = String(value || "").trim();
 
-  // Exclude square barcode binary payloads or letters.
   if (!/^[0-9\s]+$/.test(raw)) return null;
 
   const digits = raw.replace(/\s/g, "");
 
+  // Observed 22-digit USPS tracking format.
   if (/^9\d{21}$/.test(digits)) {
     return digits;
   }
 
+  // Observed routing-prefixed formats.
   if (
     digits.startsWith("420") &&
     (digits.length === 30 || digits.length === 34)
@@ -781,13 +903,12 @@ function extractUspsTracking(value) {
 
 
 /****************************************************
- HIGH-SPEED CAMERA MANAGEMENT
+ CAMERA CONTROLS
 ****************************************************/
 
 async function startCamera() {
-  if (busy || cameraRunning || cameraStarting) return;
-
-  clearTimeout(resumeTimer);
+  if (cameraRunning || cameraStarting ||
+      stoppingCamera || busy) return;
 
   if (!$("accessCode").value.trim()) {
     showStatus(
@@ -798,10 +919,13 @@ async function startCamera() {
     return;
   }
 
+  clearTimeout(readyTimer);
+
   cameraStarting = true;
   $("startButton").disabled = true;
 
   try {
+    // Called through a button to help unlock audio.
     getAudioContext();
 
     await scanner.start(
@@ -816,12 +940,15 @@ async function startCamera() {
     );
 
     cameraRunning = true;
-    scannerPaused = false;
+    scanArmed = true;
 
     shell.classList.add("active");
-    shell.classList.remove("detected", "saving");
+    shell.classList.remove("detected", "accepted");
 
     $("cameraPlaceholder").classList.add("hidden");
+
+    $("startButton").textContent = "Camera Running";
+    $("startButton").disabled = true;
 
     showStatus(
       "ready",
@@ -829,9 +956,12 @@ async function startCamera() {
       "Camera ready. Scan the next USPS label."
     );
 
+    startHints();
     updateTorchButton();
 
   } catch (error) {
+    scanArmed = false;
+
     showStatus(
       "error",
       "Camera Error",
@@ -840,101 +970,73 @@ async function startCamera() {
 
   } finally {
     cameraStarting = false;
-    $("startButton").disabled = false;
+
+    if (!cameraRunning) {
+      $("startButton").disabled = false;
+      $("startButton").textContent = "Start Camera";
+    }
   }
 }
 
-
-// Stop the camera only when the employee requests it
-// or the app needs to release the device camera.
 async function stopCamera() {
-  clearTimeout(resumeTimer);
-  resumeTimer = null;
+  if (stoppingCamera) return;
+
+  clearTimeout(readyTimer);
+  readyTimer = null;
+
+  stopHints();
+  scanArmed = false;
 
   if (!cameraRunning) return;
 
+  stoppingCamera = true;
+
   try {
     await scanner.stop();
-  } catch (_) {}
-
-  cameraRunning = false;
-  scannerPaused = false;
-  torchEnabled = false;
-
-  shell.classList.remove(
-    "active", "detected", "saving"
-  );
-
-  $("torchButton").textContent = "Flashlight";
-  $("torchButton").classList.remove("on");
-
-  showStatus(
-    "ready",
-    "Camera Stopped",
-    "Tap Start Camera when ready."
-  );
-}
-
-
-// Pause decoding only. Keep the video running.
-function pauseDetection() {
-  if (!cameraRunning || scannerPaused) return;
-
-  try {
-    scanner.pause(false);
-    scannerPaused = true;
   } catch (error) {
-    console.warn("Pause unavailable:", error);
+    console.warn("Camera stop:", error);
+  } finally {
+    cameraRunning = false;
+    stoppingCamera = false;
+    torchEnabled = false;
+
+    shell.classList.remove(
+      "active", "detected", "accepted"
+    );
+
+    $("startButton").disabled = false;
+    $("startButton").textContent = "Start Camera";
+
+    $("torchButton").textContent = "Flashlight";
+    $("torchButton").classList.remove("on");
+    $("torchButton").disabled = true;
+
+    showHint(DEFAULT_HINT);
+
+    showStatus(
+      "ready",
+      "Camera Stopped",
+      "Tap Start Camera when you're ready."
+    );
   }
-}
-
-
-// Resume decoding without reopening the camera.
-function resumeDetection() {
-  if (busy || document.hidden) return;
-
-  if (!cameraRunning) {
-    startCamera();
-    return;
-  }
-
-  if (scannerPaused) {
-    try {
-      scanner.resume();
-      scannerPaused = false;
-    } catch (error) {
-      showStatus(
-        "error",
-        "Scanner Recovery Needed",
-        "Tap Stop Camera and then Start Camera."
-      );
-      return;
-    }
-  }
-
-  shell.classList.remove("detected", "saving");
-
-  showStatus(
-    "ready",
-    "Ready for Next Return",
-    "Camera is active. Scan the next USPS label."
-  );
 }
 
 
 /****************************************************
- CAMERA FLASHLIGHT
+ FLASHLIGHT
 ****************************************************/
 
 function getTorchTrack() {
   try {
     const video = $("reader").querySelector("video");
 
-    if (!video || !video.srcObject) return null;
+    if (!video || !video.srcObject) {
+      return null;
+    }
 
     const tracks = video.srcObject.getVideoTracks();
-    return tracks.length ? tracks[0] : null;
 
+    return tracks.length ? tracks[0] : null;
   } catch (_) {
     return null;
   }
@@ -954,9 +1056,8 @@ function updateTorchButton() {
 
   $("torchButton").disabled = !supported;
 
-  $("torchButton").textContent = supported
-    ? "Flashlight"
-    : "Flashlight Unavailable";
+  $("torchButton").textContent =
+    supported ? "Flashlight" : "Flashlight Unavailable";
 }
 
 async function toggleTorch() {
@@ -971,7 +1072,7 @@ async function toggleTorch() {
     const next = !torchEnabled;
 
     await track.applyConstraints({
-      advanced: [{ torch: next }]
+      advanced: [{torch: next}]
     });
 
     torchEnabled = next;
@@ -983,45 +1084,47 @@ async function toggleTorch() {
 
   } catch (_) {
     torchEnabled = false;
-    $("torchButton").textContent =
-      "Flashlight Unavailable";
+    $("torchButton").textContent = "Flashlight Unavailable";
   }
 }
 
 
 /****************************************************
- BARCODE DETECTION
+ DETECTION
 
- 1. Ignore unsupported codes.
- 2. Ignore rapid repeat of the last accepted label.
- 3. Pause decoding while saving.
- 4. Never issue concurrent submissions.
+ Camera and animation keep moving.
+ Only callbacks are temporarily ignored during saving.
 ****************************************************/
 
 function onScanSuccess(decodedText) {
-  if (busy || scannerPaused || !cameraRunning) return;
+  if (!cameraRunning || !scanArmed || busy ||
+      document.hidden) return;
 
   const tracking = extractUspsTracking(decodedText);
-  if (!tracking) return;
 
-  const now = Date.now();
+  if (!tracking) return;
 
   if (
     tracking === lastAcceptedTracking &&
-    now - lastAcceptedTime < SAME_BARCODE_COOLDOWN_MS
+    Date.now() - lastAcceptedTime <
+      SAME_BARCODE_COOLDOWN_MS
   ) {
     return;
   }
 
   busy = true;
+  scanArmed = false;
 
-  // Stop decoding, not the camera.
-  pauseDetection();
+  stopHints();
+  clearTimeout(readyTimer);
 
-  shell.classList.add("detected", "saving");
+  shell.classList.add("detected");
+  shell.classList.remove("accepted");
 
   detectionSound();
   vibrate(65);
+
+  showHint("Barcode recognized — saving scan...");
 
   showStatus(
     "loading",
@@ -1034,7 +1137,7 @@ function onScanSuccess(decodedText) {
 
 
 /****************************************************
- MANUAL TRACKING ENTRY
+ MANUAL ENTRY
 ****************************************************/
 
 function manualSubmit() {
@@ -1068,11 +1171,16 @@ function manualSubmit() {
   }
 
   busy = true;
-  pauseDetection();
+  scanArmed = false;
 
-  shell.classList.add("detected", "saving");
+  stopHints();
+  clearTimeout(readyTimer);
+
+  shell.classList.add("detected");
 
   detectionSound();
+
+  showHint("Saving manually entered tracking...");
 
   showStatus(
     "loading",
@@ -1085,10 +1193,9 @@ function manualSubmit() {
 
 
 /****************************************************
- SUBMIT TO CLOUDFLARE
+ SEND SCAN TO CLOUDFLARE
 
- Camera remains open throughout the network request.
- Barcode detection resumes only after confirmation.
+ The camera remains live during the entire request.
 ****************************************************/
 
 async function submitBarcode(barcode, tracking) {
@@ -1097,11 +1204,12 @@ async function submitBarcode(barcode, tracking) {
   if (!accessCode) {
     busy = false;
 
-    showStatus(
-      "error",
+    scanArmed = false;
+    showScanError(
       "Access Code Required",
-      "Enter warehouse access code."
+      "Enter your warehouse access code."
     );
+
     return;
   }
 
@@ -1113,8 +1221,8 @@ async function submitBarcode(barcode, tracking) {
       },
       cache: "no-store",
       body: JSON.stringify({
-        barcode,
-        accessCode
+        barcode: barcode,
+        accessCode: accessCode
       })
     });
 
@@ -1127,29 +1235,14 @@ async function submitBarcode(barcode, tracking) {
     }
 
     if (!response.ok || !result.ok) {
-      errorSound();
-      vibrate([100, 70, 180]);
-      flash("error");
-
-      showStatus(
-        "error",
+      showScanError(
         "Scan Not Accepted",
-        result.message || "Check this return."
+        result.message || "Please check this return."
       );
-
-      shell.classList.remove("detected", "saving");
-
-      busy = false;
-
-      // Stay paused after a backend rejection.
-      // Employee can check the result and tap Resume.
-      $("startButton").textContent = "Resume Scanner";
-      $("startButton").onclick = resumeAfterError;
-
       return;
     }
 
-    // The backend has acknowledged the scan.
+    // Count only acknowledged scans.
     acceptedScans++;
     updateCounter();
 
@@ -1160,11 +1253,12 @@ async function submitBarcode(barcode, tracking) {
     vibrate([70, 45, 120]);
     flash("success");
 
-    const order = result.orderName || "";
+    const order = String(result.orderName || "");
 
-    $("lastScan").textContent =
-      tracking +
-      (order ? " | Order " + order : "");
+    updateLastScan(tracking, order);
+
+    shell.classList.remove("detected");
+    shell.classList.add("accepted");
 
     if (result.dryRun) {
       showStatus(
@@ -1172,6 +1266,7 @@ async function submitBarcode(barcode, tracking) {
         "Test Scan Successful",
         result.message || "Nothing processed."
       );
+
     } else {
       showStatus(
         "success",
@@ -1181,56 +1276,107 @@ async function submitBarcode(barcode, tracking) {
       );
     }
 
+    showHint("Scan accepted — prepare the next package.");
+
     $("manualBarcode").value = "";
-    $("startButton").textContent = "Start Camera";
-    $("startButton").onclick = startCamera;
 
     busy = false;
 
-    // Camera is already open. Resume barcode decoding.
-    resumeTimer = setTimeout(() => {
-      resumeDetection();
-    }, RESUME_DELAY_MS);
+    // Short visual confirmation only.
+    // No camera stop, restart, pause or resume.
+    readyTimer = setTimeout(() => {
+      if (!cameraRunning || document.hidden || busy) {
+        return;
+      }
 
-  } catch (_) {
-    errorSound();
-    vibrate([100, 70, 180]);
-    flash("error");
+      shell.classList.remove("detected", "accepted");
 
-    showStatus(
-      "error",
+      scanArmed = true;
+
+      showStatus(
+        "ready",
+        "Ready for Next Return",
+        "Scanner active. Scan the next USPS label."
+      );
+
+      startHints();
+    }, SUCCESS_FEEDBACK_MS);
+
+  } catch (error) {
+    showScanError(
       "Connection Error",
-      "Scan not confirmed. Check Return Scans " +
-      "before retrying this package."
+      "Scan not confirmed. Check Return Scans in " +
+      "Google Sheets before trying again."
     );
-
-    shell.classList.remove("detected", "saving");
-
-    busy = false;
-
-    // Do not automatically resubmit after network errors.
-    $("startButton").textContent = "Resume Scanner";
-    $("startButton").onclick = resumeAfterError;
   }
 }
 
 
-// The employee controls recovery after an uncertain scan.
-// Resuming does not itself submit any request.
-function resumeAfterError() {
-  if (busy) return;
+/****************************************************
+ ERROR RECOVERY
 
-  $("startButton").textContent = "Start Camera";
+ Do not automatically start scanning again after
+ a backend rejection or uncertain network result.
+****************************************************/
+
+function showScanError(title, message) {
+  busy = false;
+  scanArmed = false;
+  stopHints();
+
+  shell.classList.remove("detected", "accepted");
+
+  errorSound();
+  vibrate([100, 70, 180]);
+  flash("error");
+
+  showStatus("error", title, message);
+
+  showHint(
+    "Review the error, then tap Resume Scanning.",
+    true
+  );
+
+  // Camera preview remains live.
+  // Decoding is ignored until staff explicitly resume.
+  $("startButton").disabled = false;
+  $("startButton").textContent = "Resume Scanning";
+  $("startButton").onclick = resumeAfterError;
+}
+
+function resumeAfterError() {
+  if (busy || cameraStarting || stoppingCamera) return;
+
   $("startButton").onclick = startCamera;
 
-  resumeDetection();
+  if (!cameraRunning) {
+    $("startButton").textContent = "Start Camera";
+    startCamera();
+    return;
+  }
+
+  $("startButton").textContent = "Camera Running";
+  $("startButton").disabled = true;
+
+  shell.classList.remove("detected", "accepted");
+
+  scanArmed = true;
+
+  showStatus(
+    "ready",
+    "Scanner Active",
+    "Ready to scan the next USPS label."
+  );
+
+  startHints();
 }
 
 
 /****************************************************
- PAGE VISIBILITY
+ VISIBILITY
 
- Release the camera when the tab is backgrounded.
+ Release the camera if the page is backgrounded.
+ Do not cancel an in-flight save request.
 ****************************************************/
 
 document.addEventListener("visibilitychange", () => {
@@ -1245,11 +1391,14 @@ document.addEventListener("visibilitychange", () => {
 ****************************************************/
 
 updateCounter();
+showHint(DEFAULT_HINT);
+
+$("torchButton").disabled = true;
 
 showStatus(
   "ready",
   "Ready to Scan",
-  "Enter access code and start the camera."
+  "Enter your access code and start the camera."
 );
 
 </script>
