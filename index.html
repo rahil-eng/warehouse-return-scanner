@@ -6,9 +6,7 @@
 <meta name="viewport"
       content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220">
-<title>Warehouse Scanner V2.1</title>
-
-<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<title>Warehouse Scanner V3</title>
 
 <style>
 :root {
@@ -18,7 +16,6 @@
   --blue:#2563eb;
   --green:#16a34a;
   --red:#dc2626;
-  --amber:#d97706;
 }
 
 * { box-sizing:border-box; }
@@ -36,33 +33,44 @@ body {
 .app {
   max-width:520px;
   margin:0 auto;
-  padding-bottom:28px;
+  padding-bottom:30px;
 }
 
 header {
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:19px 3px 12px;
+  padding:18px 3px 12px;
 }
 
 h1 {
   margin:0 0 4px;
-  font-size:23px;
-  letter-spacing:-.6px;
+  font-size:22px;
+  letter-spacing:-.5px;
 }
 
 .subtitle {
+  margin:0;
   color:var(--muted);
   font-size:12px;
-  margin:0;
+}
+
+.mode {
+  display:inline-block;
+  margin-top:7px;
+  padding:5px 9px;
+  border-radius:20px;
+  background:#dcfce7;
+  color:#166534;
+  font-size:11px;
+  font-weight:800;
 }
 
 .counter {
   background:white;
   border-radius:12px;
-  padding:10px 16px;
-  min-width:92px;
+  padding:10px 15px;
+  min-width:90px;
   text-align:center;
 }
 
@@ -73,8 +81,9 @@ h1 {
 }
 
 .counter span {
-  color:var(--muted);
+  display:block;
   font-size:11px;
+  color:var(--muted);
 }
 
 .panel {
@@ -87,10 +96,10 @@ h1 {
 
 label {
   display:block;
+  margin-bottom:8px;
   font-size:12px;
   font-weight:700;
   color:#475569;
-  margin-bottom:8px;
 }
 
 input {
@@ -98,9 +107,9 @@ input {
   padding:14px;
   border:1px solid #cbd5e1;
   border-radius:10px;
-  font-size:16px;
-  color:var(--ink);
   background:white;
+  color:var(--ink);
+  font-size:16px;
 }
 
 button {
@@ -118,104 +127,91 @@ button:disabled {
   cursor:not-allowed;
 }
 
-button:focus-visible,
-input:focus-visible {
-  outline:3px solid #93c5fd;
-  outline-offset:2px;
-}
-
 .primary {
-  background:var(--blue);
   color:white;
+  background:var(--blue);
 }
 
 .secondary {
-  background:#e2e8f0;
   color:#334155;
+  background:#e2e8f0;
 }
 
-.controls {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:9px;
-  margin-top:12px;
-}
-
+.controls,
 .options {
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:9px;
-  margin-top:9px;
+  margin-top:11px;
 }
 
-.option-btn {
-  background:#f1f5f9;
-  color:#475569;
+.option {
   padding:12px 8px;
   font-size:13px;
+  color:#475569;
+  background:#f1f5f9;
 }
 
-.option-btn.on {
+.option.on {
   background:#dbeafe;
   color:#1d4ed8;
 }
 
-/* CAMERA */
-
 .scanner-shell {
   position:relative;
+  min-height:280px;
   background:#0b1220;
-  min-height:270px;
   border-radius:15px;
   overflow:hidden;
   isolation:isolate;
 }
 
-#reader {
-  position:relative;
-  z-index:1;
+#camera {
   width:100%;
-  min-height:270px;
-}
-
-#reader video {
-  display:block;
-  width:100%;
+  height:280px;
+  display:none;
   object-fit:cover;
+  background:#0b1220;
 }
 
-.camera-placeholder {
+.scanner-shell.active #camera {
+  display:block;
+}
+
+.placeholder {
   position:absolute;
   inset:0;
-  z-index:0;
   display:flex;
   align-items:center;
   justify-content:center;
-  text-align:center;
   padding:20px;
+  text-align:center;
   color:#94a3b8;
   font-size:14px;
 }
 
-.scan-overlay {
+.scanner-shell.active .placeholder {
+  display:none;
+}
+
+.overlay {
   pointer-events:none;
   position:absolute;
   inset:0;
-  z-index:5;
   display:none;
   align-items:center;
   justify-content:center;
 }
 
-.scanner-shell.active .scan-overlay {
+.scanner-shell.active .overlay {
   display:flex;
 }
 
-.scan-frame {
-  position:relative;
+.frame {
   width:88%;
   max-width:400px;
-  height:135px;
+  height:145px;
+  position:relative;
 }
 
 .corner {
@@ -223,36 +219,32 @@ input:focus-visible {
   width:32px;
   height:32px;
   border:0 solid #38bdf8;
-  transition:border-color .18s ease;
+  transition:border-color .15s ease;
 }
 
 .tl {
-  top:0;
-  left:0;
+  top:0;left:0;
   border-top-width:4px;
   border-left-width:4px;
   border-radius:9px 0 0 0;
 }
 
 .tr {
-  top:0;
-  right:0;
+  top:0;right:0;
   border-top-width:4px;
   border-right-width:4px;
   border-radius:0 9px 0 0;
 }
 
 .bl {
-  bottom:0;
-  left:0;
+  bottom:0;left:0;
   border-bottom-width:4px;
   border-left-width:4px;
   border-radius:0 0 0 9px;
 }
 
 .br {
-  bottom:0;
-  right:0;
+  bottom:0;right:0;
   border-bottom-width:4px;
   border-right-width:4px;
   border-radius:0 0 9px 0;
@@ -266,15 +258,13 @@ input:focus-visible {
   height:2px;
   background:#38bdf8;
   box-shadow:0 0 12px 3px #38bdf899;
-  animation:scanMove 1.6s ease-in-out infinite alternate;
+  animation:sweep 1.6s ease-in-out infinite alternate;
 }
 
-@keyframes scanMove {
+@keyframes sweep {
   from { transform:translateY(0); }
-  to { transform:translateY(113px); }
+  to { transform:translateY(122px); }
 }
-
-/* Keep the scanning animation moving at all times. */
 
 .scanner-shell.detected .corner {
   border-color:#f59e0b;
@@ -291,20 +281,16 @@ input:focus-visible {
 
 .scanner-shell.accepted .scan-line {
   background:#22c55e;
-  box-shadow:0 0 12px #22c55e;
 }
-
-/* FEEDBACK FLASH */
 
 .flash {
   position:absolute;
   inset:0;
-  z-index:10;
   pointer-events:none;
-  opacity:0;
   display:flex;
   align-items:center;
   justify-content:center;
+  opacity:0;
 }
 
 .flash.success {
@@ -313,13 +299,13 @@ input:focus-visible {
 }
 
 .flash.error {
-  background:#dc2626bf;
+  background:#dc2626bb;
   animation:flashIn .65s ease-out;
 }
 
 @keyframes flashIn {
   0% {opacity:0;}
-  16% {opacity:1;}
+  15% {opacity:1;}
   65% {opacity:1;}
   100% {opacity:0;}
 }
@@ -330,46 +316,60 @@ input:focus-visible {
   color:white;
 }
 
-/* SCANNING GUIDANCE */
-
-.scanner-hint {
+.hint {
+  min-height:20px;
+  margin:12px 0 0;
+  color:var(--muted);
   text-align:center;
   font-size:12px;
-  color:var(--muted);
-  margin:12px 0 0;
-  min-height:20px;
-  transition:color .2s ease;
 }
 
-.scanner-hint.tip {
+.hint.tip {
   color:#1d4ed8;
   font-weight:600;
 }
 
-/* STATUS */
-
 .status {
   display:flex;
-  align-items:center;
   gap:13px;
+  align-items:center;
   min-height:90px;
   padding:17px;
   border-radius:14px;
-  border:1px solid #cbd5e1;
-  background:#e2e8f0;
+  background:#dbeafe;
+  border:1px solid #bfdbfe;
+  color:#1e40af;
+}
+
+.status.loading {
+  background:#fef3c7;
+  border-color:#fde68a;
+  color:#92400e;
+}
+
+.status.success {
+  background:#dcfce7;
+  border-color:#bbf7d0;
+  color:#166534;
+}
+
+.status.error {
+  background:#fee2e2;
+  border-color:#fecaca;
+  color:#991b1b;
 }
 
 .status-icon {
-  font-size:31px;
-  width:39px;
+  width:38px;
   flex-shrink:0;
   text-align:center;
+  font-size:30px;
 }
 
 .status-title {
+  margin-bottom:4px;
   font-size:17px;
   font-weight:800;
-  margin-bottom:4px;
 }
 
 .status-detail {
@@ -378,41 +378,18 @@ input:focus-visible {
   overflow-wrap:anywhere;
 }
 
-.status.ready {
-  background:#dbeafe;
-  color:#1e40af;
-  border-color:#bfdbfe;
-}
-
-.status.loading {
-  background:#fef3c7;
-  color:#92400e;
-  border-color:#fde68a;
-}
-
-.status.success {
-  background:#dcfce7;
-  color:#166534;
-  border-color:#bbf7d0;
-}
-
-.status.error {
-  background:#fee2e2;
-  color:#991b1b;
-  border-color:#fecaca;
-}
-
-.last-scan {
+.info {
+  margin-top:11px;
+  padding:13px;
   background:white;
   border-radius:12px;
-  padding:13px;
-  margin-top:11px;
-  font-size:13px;
   color:#475569;
+  font-size:13px;
+  line-height:1.6;
   overflow-wrap:anywhere;
 }
 
-.last-scan strong {
+.info strong {
   color:#0f172a;
 }
 
@@ -421,32 +398,17 @@ input:focus-visible {
   margin:2px 0 12px;
 }
 
-.manual-button {
+.manual-btn {
   width:100%;
   margin-top:10px;
 }
 
 .note {
+  margin:16px 6px;
+  font-size:12px;
   color:var(--muted);
   text-align:center;
-  font-size:12px;
   line-height:1.6;
-  margin:16px 6px;
-}
-
-.mode {
-  display:inline-block;
-  font-size:11px;
-  font-weight:700;
-  padding:5px 9px;
-  margin-top:8px;
-  border-radius:20px;
-  background:#dcfce7;
-  color:#166534;
-}
-
-.hidden {
-  display:none !important;
 }
 
 @media (prefers-reduced-motion:reduce) {
@@ -454,7 +416,6 @@ input:focus-visible {
     animation:none;
     top:50%;
   }
-
   .flash.success,
   .flash.error {
     animation:none;
@@ -465,13 +426,14 @@ input:focus-visible {
 </head>
 
 <body>
+
 <div class="app">
 
 <header>
   <div>
-    <h1>Warehouse Scanner V2.1</h1>
+    <h1>Warehouse Scanner V3</h1>
     <p class="subtitle">USPS Return Processing</p>
-    <span class="mode">HIGH-SPEED MODE</span>
+    <span class="mode">ZBAR WASM TEST</span>
   </div>
 
   <div class="counter">
@@ -483,25 +445,31 @@ input:focus-visible {
 <section class="panel">
   <label for="accessCode">Warehouse Access Code</label>
   <input
-    type="password"
     id="accessCode"
-    placeholder="Enter access code"
+    type="password"
     autocomplete="off"
     autocapitalize="none"
+    placeholder="Enter access code"
   >
 </section>
 
 <section class="panel">
+
   <div class="scanner-shell" id="scannerShell">
 
-    <div class="camera-placeholder" id="cameraPlaceholder">
+    <div class="placeholder">
       Tap Start Camera to begin scanning
     </div>
 
-    <div id="reader"></div>
+    <video
+      id="camera"
+      autoplay
+      muted
+      playsinline
+    ></video>
 
-    <div class="scan-overlay">
-      <div class="scan-frame">
+    <div class="overlay">
+      <div class="frame">
         <div class="corner tl"></div>
         <div class="corner tr"></div>
         <div class="corner bl"></div>
@@ -510,247 +478,212 @@ input:focus-visible {
       </div>
     </div>
 
-    <div id="scanFlash" class="flash">
-      <span id="flashIcon" class="flash-icon">✓</span>
+    <div class="flash" id="scanFlash">
+      <span class="flash-icon" id="flashIcon">✓</span>
     </div>
+
   </div>
 
-  <p class="scanner-hint" id="scannerHint">
+  <p class="hint" id="hint">
     Align the long USPS barcode inside the frame.
   </p>
 
   <div class="controls">
-    <button
-      class="primary"
-      id="startButton"
-      onclick="startCamera()">
+    <button class="primary" id="startButton">
       Start Camera
     </button>
 
-    <button
-      class="secondary"
-      id="stopButton"
-      onclick="stopCamera()">
+    <button class="secondary" id="stopButton">
       Stop Camera
     </button>
   </div>
 
   <div class="options">
-    <button
-      class="option-btn on"
-      id="soundButton"
-      onclick="toggleSound()">
+    <button class="option on" id="soundButton">
       🔊 Sound On
     </button>
 
-    <button
-      class="option-btn"
-      id="torchButton"
-      onclick="toggleTorch()">
+    <button class="option" id="torchButton" disabled>
       Flashlight
     </button>
   </div>
+
 </section>
 
-<section
-  class="status ready"
-  id="status"
-  role="status"
-  aria-live="polite">
-
+<section class="status" id="status"
+         role="status" aria-live="polite">
   <div class="status-icon" id="statusIcon">◎</div>
-
   <div>
     <div class="status-title" id="statusTitle">
       Ready to Scan
     </div>
-
     <div class="status-detail" id="statusDetail">
-      Enter access code and start camera.
+      Enter your access code and start the camera.
     </div>
   </div>
 </section>
 
-<div class="last-scan">
-  <strong>Last Scan:</strong>
-  <span id="lastScan">No scans yet</span>
+<div class="info">
+  <div>
+    <strong>Last Scan:</strong>
+    <span id="lastScan">No scans yet</span>
+  </div>
+  <div>
+    <strong>Recognition Time:</strong>
+    <span id="recognitionTime">--</span>
+  </div>
+  <div>
+    <strong>Scanning Engine:</strong>
+    ZBar WebAssembly
+  </div>
 </div>
 
 <section class="panel">
   <h3 class="section-title">Manual Tracking Entry</h3>
 
   <input
-    type="text"
     id="manualBarcode"
+    type="text"
     inputmode="numeric"
-    placeholder="Enter USPS tracking number"
     autocomplete="off"
+    placeholder="Enter USPS tracking number"
   >
 
-  <button
-    class="primary manual-button"
-    id="manualButton"
-    onclick="manualSubmit()">
+  <button class="primary manual-btn" id="manualButton">
     Submit Tracking Number
   </button>
 </section>
 
 <p class="note">
-  A successful scan means Google Sheets accepted the
-  return for background processing. Final refund
-  or exchange results are tracked separately.
+  Test ZBar recognition speed before using V3
+  in production. A successful scan means the
+  backend accepted the return, not that Loop
+  has completed its processing.
 </p>
 
 </div>
 
-<script>
-"use strict";
+<script type="module">
 
 /****************************************************
- CONFIGURATION
+ ZBAR WEBASSEMBLY
+
+ Use the inlined ESM build to avoid requiring a
+ separate WASM asset in the GitHub repository.
 ****************************************************/
 
 const API_URL =
   "https://warehouse-scanner-bridge.rahil-570.workers.dev";
 
-// Decode the long USPS Code 128 barcode.
-const scanner = new Html5Qrcode("reader", {
-  formatsToSupport: [
-    Html5QrcodeSupportedFormats.CODE_128
-  ],
-  useBarCodeDetectorIfSupported: true,
-  verbose: false
-});
+const ZBAR_URL =
+  "https://cdn.jsdelivr.net/npm/@undecaf/zbar-wasm@0.11.0/dist/inlined/index.mjs";
 
-const SCANNER_FPS = 20;
-
-// Short visual acknowledgement, without pausing
-// the video or barcode decoder.
+const DECODE_INTERVAL_MS = 130;
 const SUCCESS_FEEDBACK_MS = 650;
-
-// Ignore the same successfully saved tracking number
-// for a short period, reducing accidental re-scans.
-const SAME_BARCODE_COOLDOWN_MS = 15000;
+const DUPLICATE_COOLDOWN_MS = 15000;
 
 const DEFAULT_HINT =
   "Align the long USPS barcode inside the frame.";
 
-let cameraRunning = false;
-let cameraStarting = false;
-let stoppingCamera = false;
-
-let busy = false;
-let scanArmed = true;
-let soundEnabled = true;
-let torchEnabled = false;
-let audioContext = null;
-let acceptedScans = 0;
-
-let lastAcceptedTracking = "";
-let lastAcceptedTime = 0;
-
-let hintTimer = null;
-let readyTimer = null;
-let hintStartedAt = 0;
-let hintText = "";
-
 const $ = id => document.getElementById(id);
+
+let scanImageData = null;
+
+let stream = null;
+let running = false;
+let starting = false;
+let stopping = false;
+let busy = false;
+let armed = false;
+
+let decodeTimer = null;
+let guidanceTimer = null;
+let readyTimer = null;
+let decodeGeneration = 0;
+
+let readySince = 0;
+let acceptedCount = 0;
+
+let lastTracking = "";
+let lastTrackingAt = 0;
+
+let soundEnabled = true;
+let audioContext = null;
+let torchEnabled = false;
+
+const video = $("camera");
 const shell = $("scannerShell");
 
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d", {
+  willReadFrequently:true
+});
 
 /****************************************************
- DISPLAY HELPERS
+ UI
 ****************************************************/
 
-function showStatus(type, title, detail) {
-  $("status").className = "status " + type;
+function status(type, title, detail) {
+  $("status").className =
+    type === "ready" ? "status" : "status " + type;
+
   $("statusTitle").textContent = title;
   $("statusDetail").textContent = detail;
 
   const icons = {
-    ready: "◎",
-    loading: "◉",
-    success: "✓",
-    error: "✕"
+    ready:"◎",
+    loading:"◉",
+    success:"✓",
+    error:"✕"
   };
 
   $("statusIcon").textContent = icons[type] || "◎";
 }
 
-function showHint(text, isTip = false) {
-  if (hintText === text &&
-      $("scannerHint").classList.contains("tip") === isTip) {
-    return;
-  }
+function hint(message, isTip = false) {
+  $("hint").textContent = message;
+  $("hint").classList.toggle("tip", isTip);
+}
 
-  hintText = text;
-  $("scannerHint").textContent = text;
-  $("scannerHint").classList.toggle("tip", isTip);
+function flash(type) {
+  const el = $("scanFlash");
+
+  el.className = "flash";
+  $("flashIcon").textContent =
+    type === "success" ? "✓" : "✕";
+
+  void el.offsetWidth;
+
+  el.classList.add(type);
 }
 
 function updateCounter() {
-  $("scanCount").textContent = acceptedScans;
+  $("scanCount").textContent = acceptedCount;
 }
 
-function updateLastScan(tracking, order) {
-  $("lastScan").textContent =
-    tracking + (order ? " | Order " + order : "");
-}
+function updateStartButton() {
+  const button = $("startButton");
 
+  if (starting || stopping) {
+    button.disabled = true;
+    button.textContent = "Please Wait";
+    return;
+  }
 
-/****************************************************
- SMART SCANNING GUIDANCE
-
- Suggestions are based on elapsed time only.
- They do not claim to measure focus or distance.
-****************************************************/
-
-function stopHints() {
-  if (hintTimer !== null) {
-    clearInterval(hintTimer);
-    hintTimer = null;
+  if (running && armed) {
+    button.disabled = true;
+    button.textContent = "Camera Running";
+  } else if (running && !busy) {
+    button.disabled = false;
+    button.textContent = "Resume Scanning";
+  } else if (running) {
+    button.disabled = true;
+    button.textContent = "Saving Scan";
+  } else {
+    button.disabled = false;
+    button.textContent = "Start Camera";
   }
 }
-
-function startHints() {
-  stopHints();
-
-  hintStartedAt = Date.now();
-  showHint(DEFAULT_HINT);
-
-  hintTimer = setInterval(() => {
-    if (!cameraRunning || !scanArmed || busy ||
-        document.hidden) {
-      return;
-    }
-
-    const seconds =
-      (Date.now() - hintStartedAt) / 1000;
-
-    if (seconds < 5) {
-      showHint(DEFAULT_HINT);
-
-    } else if (seconds < 11) {
-      showHint(
-        "Try moving closer or adjusting the angle.",
-        true
-      );
-
-    } else if (seconds < 17) {
-      showHint(
-        "Move back slightly to fit the full barcode.",
-        true
-      );
-
-    } else {
-      // Repeat useful suggestions without accumulating
-      // multiple independent timers.
-      hintStartedAt = Date.now();
-      showHint(DEFAULT_HINT);
-    }
-  }, 500);
-}
-
 
 /****************************************************
  AUDIO
@@ -759,13 +692,12 @@ function startHints() {
 function getAudioContext() {
   if (!soundEnabled) return null;
 
+  const AudioClass =
+    window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioClass) return null;
+
   if (!audioContext) {
-    const AudioClass =
-      window.AudioContext ||
-      window.webkitAudioContext;
-
-    if (!AudioClass) return null;
-
     audioContext = new AudioClass();
   }
 
@@ -780,15 +712,17 @@ function tone(frequency, duration, delay = 0) {
   if (!soundEnabled) return;
 
   try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
+    const ac = getAudioContext();
+    if (!ac) return;
 
-    const start = ctx.currentTime + delay;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    const start = ac.currentTime + delay;
+    const oscillator = ac.createOscillator();
+    const gain = ac.createGain();
 
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(frequency, start);
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(
+      frequency, start
+    );
 
     gain.gain.setValueAtTime(0.0001, start);
     gain.gain.exponentialRampToValueAtTime(
@@ -798,19 +732,16 @@ function tone(frequency, duration, delay = 0) {
       0.0001, start + duration
     );
 
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+    oscillator.connect(gain);
+    gain.connect(ac.destination);
 
-    osc.start(start);
-    osc.stop(start + duration + 0.02);
-
-  } catch (_) {
-    // Audio is optional.
-  }
+    oscillator.start(start);
+    oscillator.stop(start + duration + 0.02);
+  } catch (_) {}
 }
 
 function detectionSound() {
-  tone(880, 0.1);
+  tone(880, 0.10);
 }
 
 function successSound() {
@@ -823,27 +754,6 @@ function errorSound() {
   tone(220, 0.25, 0.2);
 }
 
-function toggleSound() {
-  soundEnabled = !soundEnabled;
-
-  $("soundButton").textContent =
-    soundEnabled ? "🔊 Sound On" : "🔇 Sound Off";
-
-  $("soundButton").classList.toggle(
-    "on", soundEnabled
-  );
-
-  if (soundEnabled) {
-    getAudioContext();
-    detectionSound();
-  }
-}
-
-
-/****************************************************
- VIBRATION
-****************************************************/
-
 function vibrate(pattern) {
   try {
     if (typeof navigator.vibrate === "function") {
@@ -852,41 +762,24 @@ function vibrate(pattern) {
   } catch (_) {}
 }
 
-
 /****************************************************
- GREEN/RED FLASH
+ USPS VALIDATION
+
+ Only accept the USPS tracking formats used
+ by the existing warehouse backend.
 ****************************************************/
 
-function flash(type) {
-  const element = $("scanFlash");
-
-  element.className = "flash";
-  $("flashIcon").textContent =
-    type === "success" ? "✓" : "✕";
-
-  void element.offsetWidth;
-
-  element.classList.add(type);
-}
-
-
-/****************************************************
- USPS TRACKING VALIDATION
-****************************************************/
-
-function extractUspsTracking(value) {
+function extractTracking(value) {
   const raw = String(value || "").trim();
 
   if (!/^[0-9\s]+$/.test(raw)) return null;
 
   const digits = raw.replace(/\s/g, "");
 
-  // Observed 22-digit USPS tracking format.
   if (/^9\d{21}$/.test(digits)) {
     return digits;
   }
 
-  // Observed routing-prefixed formats.
   if (
     digits.startsWith("420") &&
     (digits.length === 30 || digits.length === 34)
@@ -901,17 +794,48 @@ function extractUspsTracking(value) {
   return null;
 }
 
-
 /****************************************************
- CAMERA CONTROLS
+ LOAD ZBAR ENGINE
 ****************************************************/
 
-async function startCamera() {
-  if (cameraRunning || cameraStarting ||
-      stoppingCamera || busy) return;
+async function loadZBar() {
+  if (scanImageData) return;
 
-  if (!$("accessCode").value.trim()) {
-    showStatus(
+  status(
+    "loading",
+    "Loading Scanner Engine",
+    "Preparing ZBar WebAssembly..."
+  );
+
+  const zbar = await import(ZBAR_URL);
+
+  if (typeof zbar.scanImageData !== "function") {
+    throw new Error("ZBar scanner failed to load.");
+  }
+
+  scanImageData = zbar.scanImageData;
+}
+
+/****************************************************
+ CAMERA
+****************************************************/
+
+function getCameraTrack() {
+  return stream?.getVideoTracks()?.[0] || null;
+}
+
+async function startCamera() {
+  if (starting || stopping || busy) return;
+
+  if (running) {
+    if (!armed) resumeAfterError();
+    return;
+  }
+
+  const accessCode = $("accessCode").value.trim();
+
+  if (!accessCode) {
+    status(
       "error",
       "Access Code Required",
       "Enter your warehouse access code."
@@ -919,131 +843,138 @@ async function startCamera() {
     return;
   }
 
-  clearTimeout(readyTimer);
-
-  cameraStarting = true;
-  $("startButton").disabled = true;
+  starting = true;
+  updateStartButton();
 
   try {
-    // Called through a button to help unlock audio.
     getAudioContext();
 
-    await scanner.start(
-      { facingMode: "environment" },
-      {
-        fps: SCANNER_FPS,
-        aspectRatio: 1.777778,
-        disableFlip: true
-      },
-      onScanSuccess,
-      function() {}
-    );
+    await loadZBar();
 
-    cameraRunning = true;
-    scanArmed = true;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error(
+        "This browser does not support camera access."
+      );
+    }
+
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio:false,
+      video:{
+        facingMode:{ideal:"environment"},
+        width:{ideal:1280},
+        height:{ideal:720},
+        frameRate:{ideal:30}
+      }
+    });
+
+    video.srcObject = stream;
+
+    await video.play();
+
+    if (!video.videoWidth || !video.videoHeight) {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error("Camera video did not load."));
+        }, 5000);
+
+        video.addEventListener("loadedmetadata", () => {
+          clearTimeout(timeout);
+          resolve();
+        }, {once:true});
+      });
+    }
+
+    running = true;
+    armed = true;
 
     shell.classList.add("active");
     shell.classList.remove("detected", "accepted");
 
-    $("cameraPlaceholder").classList.add("hidden");
-
-    $("startButton").textContent = "Camera Running";
-    $("startButton").disabled = true;
-
-    showStatus(
+    status(
       "ready",
       "Scanner Active",
-      "Camera ready. Scan the next USPS label."
+      "Point the camera at the long USPS barcode."
     );
 
-    startHints();
+    startGuidance();
     updateTorchButton();
 
-  } catch (error) {
-    scanArmed = false;
+    decodeGeneration++;
+    scheduleDecode(0);
 
-    showStatus(
+  } catch (error) {
+    const message =
+      String(error?.message || error);
+
+    status(
       "error",
-      "Camera Error",
-      String(error.message || error)
+      "Scanner Start Failed",
+      message
     );
 
+    armed = false;
+    releaseCamera();
   } finally {
-    cameraStarting = false;
-
-    if (!cameraRunning) {
-      $("startButton").disabled = false;
-      $("startButton").textContent = "Start Camera";
-    }
+    starting = false;
+    updateStartButton();
   }
+}
+
+function releaseCamera() {
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+  }
+
+  stream = null;
+  video.pause();
+  video.srcObject = null;
+
+  running = false;
+  torchEnabled = false;
+
+  shell.classList.remove(
+    "active", "detected", "accepted"
+  );
+
+  $("torchButton").disabled = true;
+  $("torchButton").textContent = "Flashlight";
+  $("torchButton").classList.remove("on");
 }
 
 async function stopCamera() {
-  if (stoppingCamera) return;
+  if (stopping) return;
 
+  stopping = true;
+  armed = false;
+  decodeGeneration++;
+
+  clearTimeout(decodeTimer);
   clearTimeout(readyTimer);
-  readyTimer = null;
+  stopGuidance();
 
-  stopHints();
-  scanArmed = false;
+  releaseCamera();
 
-  if (!cameraRunning) return;
+  hint(DEFAULT_HINT);
 
-  stoppingCamera = true;
-
-  try {
-    await scanner.stop();
-  } catch (error) {
-    console.warn("Camera stop:", error);
-  } finally {
-    cameraRunning = false;
-    stoppingCamera = false;
-    torchEnabled = false;
-
-    shell.classList.remove(
-      "active", "detected", "accepted"
-    );
-
-    $("startButton").disabled = false;
-    $("startButton").textContent = "Start Camera";
-
-    $("torchButton").textContent = "Flashlight";
-    $("torchButton").classList.remove("on");
-    $("torchButton").disabled = true;
-
-    showHint(DEFAULT_HINT);
-
-    showStatus(
+  // A network request already started is not cancelled.
+  if (!busy) {
+    status(
       "ready",
       "Camera Stopped",
-      "Tap Start Camera when you're ready."
+      "Tap Start Camera when ready."
     );
   }
-}
 
+  stopping = false;
+  updateStartButton();
+}
 
 /****************************************************
  FLASHLIGHT
 ****************************************************/
 
-function getTorchTrack() {
-  try {
-    const video = $("reader").querySelector("video");
-
-    if (!video || !video.srcObject) {
-      return null;
-    }
-
-    const tracks = video.srcObject.getVideoTracks();
-
-    return tracks.length ? tracks[0] : null;
-  } catch (_) {
-    return null;
-  }
-}
-
 function updateTorchButton() {
-  const track = getTorchTrack();
+  const track = getCameraTrack();
   let supported = false;
 
   try {
@@ -1055,24 +986,24 @@ function updateTorchButton() {
   } catch (_) {}
 
   $("torchButton").disabled = !supported;
-
   $("torchButton").textContent =
     supported ? "Flashlight" : "Flashlight Unavailable";
 }
 
 async function toggleTorch() {
-  const track = getTorchTrack();
-  if (!track) return;
+  const track = getCameraTrack();
+
+  if (!track || typeof track.getCapabilities !== "function") {
+    return;
+  }
 
   try {
-    const caps = track.getCapabilities();
-
-    if (!caps.torch) return;
+    if (!track.getCapabilities().torch) return;
 
     const next = !torchEnabled;
 
     await track.applyConstraints({
-      advanced: [{torch: next}]
+      advanced:[{torch:next}]
     });
 
     torchEnabled = next;
@@ -1081,60 +1012,250 @@ async function toggleTorch() {
       next ? "Flashlight On" : "Flashlight";
 
     $("torchButton").classList.toggle("on", next);
-
   } catch (_) {
     torchEnabled = false;
-    $("torchButton").textContent = "Flashlight Unavailable";
+    $("torchButton").textContent =
+      "Flashlight Unavailable";
   }
 }
 
-
 /****************************************************
- DETECTION
-
- Camera and animation keep moving.
- Only callbacks are temporarily ignored during saving.
+ TIMED SCANNING TIPS
 ****************************************************/
 
-function onScanSuccess(decodedText) {
-  if (!cameraRunning || !scanArmed || busy ||
-      document.hidden) return;
+function stopGuidance() {
+  clearInterval(guidanceTimer);
+  guidanceTimer = null;
+}
 
-  const tracking = extractUspsTracking(decodedText);
+function startGuidance() {
+  stopGuidance();
 
-  if (!tracking) return;
+  readySince = performance.now();
+  hint(DEFAULT_HINT);
 
+  guidanceTimer = setInterval(() => {
+    if (!running || !armed || busy || document.hidden) {
+      return;
+    }
+
+    const elapsed =
+      (performance.now() - readySince) / 1000;
+
+    if (elapsed < 5) {
+      hint(DEFAULT_HINT);
+    } else if (elapsed < 11) {
+      hint(
+        "Try moving closer or adjusting the angle.",
+        true
+      );
+    } else if (elapsed < 17) {
+      hint(
+        "Move back slightly to fit the full barcode.",
+        true
+      );
+    } else {
+      readySince = performance.now();
+      hint(DEFAULT_HINT);
+    }
+  }, 500);
+}
+
+/****************************************************
+ ZBAR VIDEO DECODING
+
+ Keep camera live. Analyze frames periodically.
+
+ Crop the center section to concentrate on the
+ long barcode rather than other parts of the label.
+
+ The preview itself is never paused for decoding.
+****************************************************/
+
+function scheduleDecode(delay = DECODE_INTERVAL_MS) {
+  clearTimeout(decodeTimer);
+
+  if (!running || !armed || busy || document.hidden) {
+    return;
+  }
+
+  const generation = decodeGeneration;
+
+  decodeTimer = setTimeout(() => {
+    decodeFrame(generation);
+  }, delay);
+}
+
+async function decodeFrame(generation) {
   if (
-    tracking === lastAcceptedTracking &&
-    Date.now() - lastAcceptedTime <
-      SAME_BARCODE_COOLDOWN_MS
+    !running ||
+    !armed ||
+    busy ||
+    document.hidden ||
+    generation !== decodeGeneration
   ) {
     return;
   }
 
-  busy = true;
-  scanArmed = false;
+  if (
+    video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+    !video.videoWidth ||
+    !video.videoHeight
+  ) {
+    scheduleDecode();
+    return;
+  }
 
-  stopHints();
+  try {
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+
+    // Wide crop with a generous vertical area to
+    // accommodate barcode alignment on mobile screens.
+    const sourceWidth = vw;
+    const sourceHeight = Math.round(vh * 0.66);
+
+    const sourceX = 0;
+    const sourceY =
+      Math.round((vh - sourceHeight) / 2);
+
+    // Cap decoding width to reduce CPU usage while
+    // retaining enough detail for narrow barcode lines.
+    const targetWidth = Math.min(1280, sourceWidth);
+    const targetHeight = Math.max(
+      1,
+      Math.round(
+        sourceHeight * targetWidth / sourceWidth
+      )
+    );
+
+    if (
+      canvas.width !== targetWidth ||
+      canvas.height !== targetHeight
+    ) {
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+    }
+
+    ctx.drawImage(
+      video,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      0,
+      0,
+      targetWidth,
+      targetHeight
+    );
+
+    const imageData = ctx.getImageData(
+      0,
+      0,
+      targetWidth,
+      targetHeight
+    );
+
+    const symbols = await scanImageData(imageData);
+
+    if (
+      generation !== decodeGeneration ||
+      !running ||
+      !armed ||
+      busy
+    ) {
+      return;
+    }
+
+    for (const symbol of symbols) {
+      // Ignore QR and unrelated barcode symbologies.
+      const type = String(
+        symbol.typeName || ""
+      ).toUpperCase();
+
+      if (!type.includes("CODE128")) {
+        continue;
+      }
+
+      const decoded = symbol.decode();
+      const tracking = extractTracking(decoded);
+
+      if (!tracking) continue;
+
+      const now = Date.now();
+
+      if (
+        tracking === lastTracking &&
+        now - lastTrackingAt < DUPLICATE_COOLDOWN_MS
+      ) {
+        continue;
+      }
+
+      const recognitionSeconds =
+        (performance.now() - readySince) / 1000;
+
+      onBarcodeDetected(
+        decoded,
+        tracking,
+        recognitionSeconds
+      );
+
+      return;
+    }
+
+  } catch (error) {
+    console.warn("ZBar frame error:", error);
+  }
+
+  if (
+    generation === decodeGeneration &&
+    running &&
+    armed &&
+    !busy
+  ) {
+    scheduleDecode();
+  }
+}
+
+/****************************************************
+ VALID BARCODE FOUND
+****************************************************/
+
+function onBarcodeDetected(
+  rawBarcode,
+  tracking,
+  seconds
+) {
+  if (busy || !armed) return;
+
+  busy = true;
+  armed = false;
+
+  stopGuidance();
+  clearTimeout(decodeTimer);
   clearTimeout(readyTimer);
 
   shell.classList.add("detected");
   shell.classList.remove("accepted");
 
+  $("recognitionTime").textContent =
+    seconds.toFixed(2) + " seconds";
+
   detectionSound();
   vibrate(65);
 
-  showHint("Barcode recognized — saving scan...");
+  hint("Barcode recognized — saving scan...");
 
-  showStatus(
+  status(
     "loading",
     "Barcode Detected",
     "Tracking " + tracking + ". Saving scan..."
   );
 
-  submitBarcode(decodedText, tracking);
-}
+  updateStartButton();
 
+  submitBarcode(rawBarcode, tracking);
+}
 
 /****************************************************
  MANUAL ENTRY
@@ -1144,85 +1265,86 @@ function manualSubmit() {
   if (busy) return;
 
   const value = $("manualBarcode").value.trim();
-  const tracking = extractUspsTracking(value);
+  const tracking = extractTracking(value);
 
   if (!tracking) {
     errorSound();
 
-    showStatus(
+    status(
       "error",
       "Invalid Tracking Number",
-      "Enter a supported 22-digit USPS tracking number."
+      "Enter a supported USPS tracking number."
     );
     return;
   }
 
   if (
-    tracking === lastAcceptedTracking &&
-    Date.now() - lastAcceptedTime <
-      SAME_BARCODE_COOLDOWN_MS
+    tracking === lastTracking &&
+    Date.now() - lastTrackingAt <
+      DUPLICATE_COOLDOWN_MS
   ) {
-    showStatus(
+    status(
       "error",
       "Recently Scanned",
-      "This label was just accepted. Check Return Scans."
+      "Check Return Scans before submitting again."
     );
     return;
   }
 
   busy = true;
-  scanArmed = false;
+  armed = false;
 
-  stopHints();
+  stopGuidance();
+  clearTimeout(decodeTimer);
   clearTimeout(readyTimer);
 
   shell.classList.add("detected");
 
   detectionSound();
 
-  showHint("Saving manually entered tracking...");
+  $("recognitionTime").textContent =
+    "Manual entry";
 
-  showStatus(
+  hint("Saving manually entered tracking...");
+
+  status(
     "loading",
     "Tracking Detected",
     "Saving manually entered tracking number..."
   );
 
+  updateStartButton();
+
   submitBarcode(tracking, tracking);
 }
 
-
 /****************************************************
- SEND SCAN TO CLOUDFLARE
+ CLOUDFLARE REQUEST
 
- The camera remains live during the entire request.
+ Same endpoint and request schema as V2.1.
 ****************************************************/
 
-async function submitBarcode(barcode, tracking) {
+async function submitBarcode(rawBarcode, tracking) {
   const accessCode = $("accessCode").value.trim();
 
   if (!accessCode) {
-    busy = false;
-
-    scanArmed = false;
     showScanError(
       "Access Code Required",
       "Enter your warehouse access code."
     );
-
     return;
   }
 
   try {
     const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
       },
-      cache: "no-store",
-      body: JSON.stringify({
-        barcode: barcode,
-        accessCode: accessCode
+      cache:"no-store",
+      body:JSON.stringify({
+        barcode:rawBarcode,
+        accessCode:accessCode
       })
     });
 
@@ -1231,7 +1353,9 @@ async function submitBarcode(barcode, tracking) {
     try {
       result = await response.json();
     } catch (_) {
-      throw new Error("Invalid backend response.");
+      throw new Error(
+        "Invalid response from the backend."
+      );
     }
 
     if (!response.ok || !result.ok) {
@@ -1242,33 +1366,33 @@ async function submitBarcode(barcode, tracking) {
       return;
     }
 
-    // Count only acknowledged scans.
-    acceptedScans++;
+    acceptedCount++;
     updateCounter();
 
-    lastAcceptedTracking = tracking;
-    lastAcceptedTime = Date.now();
+    lastTracking = tracking;
+    lastTrackingAt = Date.now();
 
     successSound();
-    vibrate([70, 45, 120]);
+    vibrate([70,45,120]);
     flash("success");
 
     const order = String(result.orderName || "");
 
-    updateLastScan(tracking, order);
+    $("lastScan").textContent =
+      tracking +
+      (order ? " | Order " + order : "");
 
     shell.classList.remove("detected");
     shell.classList.add("accepted");
 
     if (result.dryRun) {
-      showStatus(
+      status(
         "success",
         "Test Scan Successful",
         result.message || "Nothing processed."
       );
-
     } else {
-      showStatus(
+      status(
         "success",
         "Scan Accepted!",
         "Order " + order +
@@ -1276,126 +1400,151 @@ async function submitBarcode(barcode, tracking) {
       );
     }
 
-    showHint("Scan accepted — prepare the next package.");
+    hint("Scan accepted — prepare the next package.");
 
     $("manualBarcode").value = "";
-
     busy = false;
 
-    // Short visual confirmation only.
-    // No camera stop, restart, pause or resume.
     readyTimer = setTimeout(() => {
-      if (!cameraRunning || document.hidden || busy) {
+      if (busy || !running || document.hidden) {
+        updateStartButton();
         return;
       }
 
-      shell.classList.remove("detected", "accepted");
-
-      scanArmed = true;
-
-      showStatus(
-        "ready",
-        "Ready for Next Return",
-        "Scanner active. Scan the next USPS label."
-      );
-
-      startHints();
+      armScanner();
     }, SUCCESS_FEEDBACK_MS);
 
-  } catch (error) {
+    updateStartButton();
+
+  } catch (_) {
     showScanError(
       "Connection Error",
-      "Scan not confirmed. Check Return Scans in " +
-      "Google Sheets before trying again."
+      "Scan not confirmed. Check Return Scans " +
+      "in Google Sheets before retrying."
     );
   }
 }
 
-
 /****************************************************
  ERROR RECOVERY
-
- Do not automatically start scanning again after
- a backend rejection or uncertain network result.
 ****************************************************/
 
 function showScanError(title, message) {
   busy = false;
-  scanArmed = false;
-  stopHints();
+  armed = false;
+
+  stopGuidance();
+  clearTimeout(decodeTimer);
 
   shell.classList.remove("detected", "accepted");
 
   errorSound();
-  vibrate([100, 70, 180]);
+  vibrate([100,70,180]);
   flash("error");
 
-  showStatus("error", title, message);
+  status("error", title, message);
 
-  showHint(
+  hint(
     "Review the error, then tap Resume Scanning.",
     true
   );
 
-  // Camera preview remains live.
-  // Decoding is ignored until staff explicitly resume.
-  $("startButton").disabled = false;
-  $("startButton").textContent = "Resume Scanning";
-  $("startButton").onclick = resumeAfterError;
+  updateStartButton();
 }
 
-function resumeAfterError() {
-  if (busy || cameraStarting || stoppingCamera) return;
+function armScanner() {
+  if (!running || busy || document.hidden) return;
 
-  $("startButton").onclick = startCamera;
-
-  if (!cameraRunning) {
-    $("startButton").textContent = "Start Camera";
-    startCamera();
-    return;
-  }
-
-  $("startButton").textContent = "Camera Running";
-  $("startButton").disabled = true;
+  armed = true;
 
   shell.classList.remove("detected", "accepted");
 
-  scanArmed = true;
-
-  showStatus(
+  status(
     "ready",
-    "Scanner Active",
-    "Ready to scan the next USPS label."
+    "Ready for Next Return",
+    "Camera active. Scan the next USPS barcode."
   );
 
-  startHints();
+  startGuidance();
+  updateStartButton();
+
+  decodeGeneration++;
+  scheduleDecode(0);
 }
 
+function resumeAfterError() {
+  if (!running || busy || starting || stopping) {
+    return;
+  }
+
+  armScanner();
+}
 
 /****************************************************
- VISIBILITY
-
- Release the camera if the page is backgrounded.
- Do not cancel an in-flight save request.
+ CONTROLS
 ****************************************************/
 
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    stopCamera();
+$("startButton").addEventListener("click", () => {
+  if (running) {
+    resumeAfterError();
+  } else {
+    startCamera();
   }
 });
 
+$("stopButton").addEventListener(
+  "click",
+  stopCamera
+);
+
+$("manualButton").addEventListener(
+  "click",
+  manualSubmit
+);
+
+$("soundButton").addEventListener("click", () => {
+  soundEnabled = !soundEnabled;
+
+  $("soundButton").textContent =
+    soundEnabled ? "🔊 Sound On" : "🔇 Sound Off";
+
+  $("soundButton").classList.toggle(
+    "on", soundEnabled
+  );
+
+  if (soundEnabled) {
+    getAudioContext();
+    detectionSound();
+  }
+});
+
+$("torchButton").addEventListener(
+  "click",
+  toggleTorch
+);
+
+/****************************************************
+ VISIBILITY
+****************************************************/
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+    if (document.hidden) {
+      stopCamera();
+    }
+  }
+);
 
 /****************************************************
  INITIAL STATE
 ****************************************************/
 
 updateCounter();
-showHint(DEFAULT_HINT);
+updateStartButton();
+hint(DEFAULT_HINT);
 
-$("torchButton").disabled = true;
-
-showStatus(
+status(
   "ready",
   "Ready to Scan",
   "Enter your access code and start the camera."
