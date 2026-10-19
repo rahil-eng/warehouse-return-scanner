@@ -3,9 +3,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b1220">
-<title>Warehouse Return Scanner</title>
+<title>Warehouse Scanner V2</title>
 
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
@@ -27,50 +28,48 @@ body {
   padding:env(safe-area-inset-top) 14px
           env(safe-area-inset-bottom);
   background:var(--bg);
+  color:var(--ink);
   font-family:-apple-system,BlinkMacSystemFont,
               "Segoe UI",Arial,sans-serif;
-  color:var(--ink);
 }
 
 .app {
   max-width:520px;
   margin:0 auto;
-  padding-bottom:22px;
+  padding-bottom:28px;
 }
 
 header {
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:18px 3px 12px;
+  padding:19px 3px 12px;
 }
 
-header h1 {
-  font-size:22px;
-  margin:0 0 3px;
-  letter-spacing:-.5px;
+h1 {
+  margin:0 0 4px;
+  font-size:23px;
+  letter-spacing:-.6px;
 }
 
-header p {
+.subtitle {
   color:var(--muted);
-  margin:0;
   font-size:12px;
+  margin:0;
 }
 
 .counter {
   background:white;
   border-radius:12px;
-  padding:9px 15px;
-  min-width:87px;
+  padding:10px 16px;
+  min-width:92px;
   text-align:center;
-  box-shadow:0 2px 9px #00000008;
 }
 
 .counter strong {
   display:block;
-  font-size:25px;
+  font-size:27px;
   color:var(--green);
-  line-height:1.2;
 }
 
 .counter span {
@@ -80,34 +79,34 @@ header p {
 
 .panel {
   background:white;
-  border-radius:17px;
+  border-radius:16px;
   padding:15px;
   margin:12px 0;
   box-shadow:0 3px 14px #00000008;
 }
 
-.field-label {
+label {
   display:block;
   font-size:12px;
   font-weight:700;
-  margin-bottom:7px;
   color:#475569;
+  margin-bottom:8px;
 }
 
 input {
   width:100%;
+  padding:14px;
   border:1px solid #cbd5e1;
   border-radius:10px;
   font-size:16px;
-  padding:14px;
-  background:white;
   color:var(--ink);
+  background:white;
 }
 
 button {
   border:0;
   border-radius:11px;
-  padding:14px 16px;
+  padding:14px;
   font-size:15px;
   font-weight:700;
   cursor:pointer;
@@ -119,6 +118,12 @@ button:disabled {
   cursor:not-allowed;
 }
 
+button:focus-visible,
+input:focus-visible {
+  outline:3px solid #93c5fd;
+  outline-offset:2px;
+}
+
 .primary {
   background:var(--blue);
   color:white;
@@ -127,11 +132,6 @@ button:disabled {
 .secondary {
   background:#e2e8f0;
   color:#334155;
-}
-
-button:focus-visible,input:focus-visible {
-  outline:3px solid #93c5fd;
-  outline-offset:2px;
 }
 
 .controls {
@@ -151,8 +151,8 @@ button:focus-visible,input:focus-visible {
 .option-btn {
   background:#f1f5f9;
   color:#475569;
-  font-size:13px;
   padding:12px 8px;
+  font-size:13px;
 }
 
 .option-btn.on {
@@ -163,9 +163,9 @@ button:focus-visible,input:focus-visible {
 .scanner-shell {
   position:relative;
   background:#0b1220;
+  min-height:270px;
   border-radius:15px;
   overflow:hidden;
-  min-height:265px;
   isolation:isolate;
 }
 
@@ -173,13 +173,26 @@ button:focus-visible,input:focus-visible {
   position:relative;
   z-index:1;
   width:100%;
-  min-height:265px;
+  min-height:270px;
 }
 
 #reader video {
   display:block;
   width:100%;
   object-fit:cover;
+}
+
+.camera-placeholder {
+  position:absolute;
+  inset:0;
+  z-index:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:20px;
+  color:#94a3b8;
+  font-size:14px;
 }
 
 .scan-overlay {
@@ -197,20 +210,18 @@ button:focus-visible,input:focus-visible {
 }
 
 .scan-frame {
-  width:85%;
-  height:126px;
-  max-width:380px;
   position:relative;
+  width:88%;
+  max-width:400px;
+  height:135px;
 }
 
 .corner {
   position:absolute;
-  width:30px;
-  height:30px;
-  border-color:#38bdf8;
-  border-style:solid;
-  border-width:0;
-  transition:border-color .15s ease;
+  width:32px;
+  height:32px;
+  border:0 solid #38bdf8;
+  transition:border-color .2s;
 }
 
 .tl {
@@ -219,21 +230,18 @@ button:focus-visible,input:focus-visible {
   border-left-width:4px;
   border-radius:9px 0 0 0;
 }
-
 .tr {
   top:0;right:0;
   border-top-width:4px;
   border-right-width:4px;
   border-radius:0 9px 0 0;
 }
-
 .bl {
   bottom:0;left:0;
   border-bottom-width:4px;
   border-left-width:4px;
   border-radius:0 0 0 9px;
 }
-
 .br {
   bottom:0;right:0;
   border-bottom-width:4px;
@@ -243,18 +251,18 @@ button:focus-visible,input:focus-visible {
 
 .scan-line {
   position:absolute;
-  top:8px;
-  left:7%;
-  width:86%;
+  top:10px;
+  left:6%;
+  width:88%;
   height:2px;
   background:#38bdf8;
   box-shadow:0 0 12px 3px #38bdf899;
-  animation:scanMove 2s ease-in-out infinite alternate;
+  animation:scanMove 1.6s ease-in-out infinite alternate;
 }
 
 @keyframes scanMove {
   from { transform:translateY(0); }
-  to { transform:translateY(107px); }
+  to { transform:translateY(113px); }
 }
 
 .scanner-shell.detected .corner {
@@ -266,7 +274,11 @@ button:focus-visible,input:focus-visible {
   box-shadow:0 0 12px #f59e0b;
 }
 
-.scan-flash {
+.scanner-shell.saving .scan-line {
+  animation-play-state:paused;
+}
+
+.flash {
   position:absolute;
   inset:0;
   z-index:10;
@@ -277,61 +289,51 @@ button:focus-visible,input:focus-visible {
   justify-content:center;
 }
 
-.scan-flash.success {
+.flash.success {
   background:#16a34ad9;
-  animation:flashIn .8s ease-out;
+  animation:flashIn .75s ease-out;
 }
 
-.scan-flash.error {
-  background:#dc2626b8;
+.flash.error {
+  background:#dc2626bf;
   animation:flashIn .65s ease-out;
 }
 
 @keyframes flashIn {
-  0% { opacity:0; }
-  18% { opacity:1; }
-  65% { opacity:1; }
-  100% { opacity:0; }
+  0% {opacity:0;}
+  16% {opacity:1;}
+  65% {opacity:1;}
+  100% {opacity:0;}
 }
 
 .flash-icon {
-  font-size:84px;
-  color:white;
+  font-size:90px;
   font-weight:800;
+  color:white;
 }
 
-.camera-placeholder {
-  color:#94a3b8;
-  font-size:14px;
+.scanner-hint {
   text-align:center;
-  padding:100px 15px;
-  position:absolute;
-  inset:0;
-  z-index:0;
-}
-
-.camera-help {
   font-size:12px;
   color:var(--muted);
-  text-align:center;
-  margin:10px 0 0;
+  margin:11px 0 0;
 }
 
 .status {
-  border-radius:14px;
-  padding:17px;
   display:flex;
-  gap:13px;
   align-items:center;
+  gap:13px;
   min-height:90px;
-  background:#e2e8f0;
+  padding:17px;
+  border-radius:14px;
   border:1px solid #cbd5e1;
+  background:#e2e8f0;
 }
 
 .status-icon {
-  font-size:30px;
+  font-size:31px;
+  width:39px;
   flex-shrink:0;
-  width:38px;
   text-align:center;
 }
 
@@ -343,7 +345,7 @@ button:focus-visible,input:focus-visible {
 
 .status-detail {
   font-size:13px;
-  line-height:1.45;
+  line-height:1.5;
   overflow-wrap:anywhere;
 }
 
@@ -390,25 +392,42 @@ button:focus-visible,input:focus-visible {
   margin:2px 0 12px;
 }
 
-.note {
-  font-size:12px;
-  color:var(--muted);
-  text-align:center;
-  margin:16px 6px;
-  line-height:1.6;
-}
-
-#manualSubmit {
+.manual-button {
   width:100%;
   margin-top:10px;
+}
+
+.note {
+  color:var(--muted);
+  text-align:center;
+  font-size:12px;
+  line-height:1.6;
+  margin:16px 6px;
+}
+
+.mode {
+  display:inline-block;
+  font-size:11px;
+  font-weight:700;
+  padding:5px 9px;
+  margin-top:8px;
+  border-radius:20px;
+  background:#dcfce7;
+  color:#166534;
 }
 
 .hidden { display:none !important; }
 
 @media (prefers-reduced-motion:reduce) {
-  .scan-line { animation:none;top:50%; }
-  .scan-flash.success,
-  .scan-flash.error { animation:none;opacity:.55; }
+  .scan-line {
+    animation:none;
+    top:50%;
+  }
+  .flash.success,
+  .flash.error {
+    animation:none;
+    opacity:.5;
+  }
 }
 </style>
 </head>
@@ -418,8 +437,9 @@ button:focus-visible,input:focus-visible {
 
 <header>
   <div>
-    <h1>Warehouse Scanner</h1>
-    <p>USPS Return Processing</p>
+    <h1>Warehouse Scanner V2</h1>
+    <p class="subtitle">USPS Return Processing</p>
+    <span class="mode">HIGH-SPEED MODE</span>
   </div>
 
   <div class="counter">
@@ -429,13 +449,10 @@ button:focus-visible,input:focus-visible {
 </header>
 
 <section class="panel">
-  <label class="field-label" for="accessCode">
-    Warehouse Access Code
-  </label>
-
+  <label for="accessCode">Warehouse Access Code</label>
   <input
-    id="accessCode"
     type="password"
+    id="accessCode"
     placeholder="Enter access code"
     autocomplete="off"
     autocapitalize="none"
@@ -445,6 +462,7 @@ button:focus-visible,input:focus-visible {
 <section class="panel">
 
   <div class="scanner-shell" id="scannerShell">
+
     <div class="camera-placeholder" id="cameraPlaceholder">
       Tap Start Camera to begin scanning
     </div>
@@ -461,13 +479,13 @@ button:focus-visible,input:focus-visible {
       </div>
     </div>
 
-    <div id="scanFlash" class="scan-flash">
+    <div id="scanFlash" class="flash">
       <span id="flashIcon" class="flash-icon">✓</span>
     </div>
   </div>
 
-  <p class="camera-help">
-    Align the long USPS barcode inside the blue frame.
+  <p class="scanner-hint">
+    Align the long USPS barcode inside the frame.
   </p>
 
   <div class="controls">
@@ -484,39 +502,34 @@ button:focus-visible,input:focus-visible {
   </div>
 
   <div class="options">
-    <button
-      class="option-btn on"
-      id="soundButton"
-      onclick="toggleSound()">
+    <button class="option-btn on"
+            id="soundButton"
+            onclick="toggleSound()">
       🔊 Sound On
     </button>
 
-    <button
-      class="option-btn"
-      id="torchButton"
-      onclick="toggleTorch()">
+    <button class="option-btn"
+            id="torchButton"
+            onclick="toggleTorch()">
       Flashlight
     </button>
   </div>
-
 </section>
 
-<section id="status" class="status ready"
+<section class="status ready" id="status"
          role="status" aria-live="polite">
   <div class="status-icon" id="statusIcon">◎</div>
-
   <div>
     <div class="status-title" id="statusTitle">
       Ready to Scan
     </div>
-
     <div class="status-detail" id="statusDetail">
       Enter warehouse access code and start camera.
     </div>
   </div>
 </section>
 
-<div class="last-scan" id="lastScanBox">
+<div class="last-scan">
   <strong>Last Scan:</strong>
   <span id="lastScan">No scans yet</span>
 </div>
@@ -525,24 +538,23 @@ button:focus-visible,input:focus-visible {
   <h3 class="section-title">Manual Tracking Entry</h3>
 
   <input
-    id="manualBarcode"
     type="text"
+    id="manualBarcode"
     inputmode="numeric"
     placeholder="Enter USPS tracking number"
     autocomplete="off"
   >
 
-  <button class="primary"
-          id="manualSubmit"
+  <button class="primary manual-button"
           onclick="manualSubmit()">
     Submit Tracking Number
   </button>
 </section>
 
 <p class="note">
-  A successful scan means the return was saved for
-  background processing. Final refund or exchange
-  status is tracked in Google Sheets.
+  A successful scan means Google Sheets accepted the
+  return for background processing. Final processing
+  results are tracked separately in Google Sheets.
 </p>
 
 </div>
@@ -550,47 +562,56 @@ button:focus-visible,input:focus-visible {
 <script>
 "use strict";
 
-/************************************************
+/****************************************************
  CONFIGURATION
-************************************************/
+****************************************************/
 
 const API_URL =
   "https://warehouse-scanner-bridge.rahil-570.workers.dev";
 
+// Focus exclusively on the long USPS barcode.
 const scanner = new Html5Qrcode("reader", {
   formatsToSupport: [
-    Html5QrcodeSupportedFormats.CODE_128,
-    Html5QrcodeSupportedFormats.CODE_39,
-    Html5QrcodeSupportedFormats.ITF
+    Html5QrcodeSupportedFormats.CODE_128
   ],
   useBarCodeDetectorIfSupported: true,
   verbose: false
 });
 
+// Controls the speed of restarting decoding.
+const RESUME_DELAY_MS = 950;
+
+// Avoid repeatedly accepting the identical label
+// immediately after a successful scan.
+const SAME_BARCODE_COOLDOWN_MS = 10000;
+
+// Ask the library to attempt up to 20 scans per second.
+// Actual speed depends on device capability.
+const SCANNER_FPS = 20;
+
 let cameraRunning = false;
 let cameraStarting = false;
+let scannerPaused = false;
 let busy = false;
 let soundEnabled = true;
 let torchEnabled = false;
 let audioContext = null;
-let restartTimer = null;
+let resumeTimer = null;
 let acceptedScans = 0;
 
+let lastAcceptedTracking = "";
+let lastAcceptedTime = 0;
+
 const $ = id => document.getElementById(id);
-
 const shell = $("scannerShell");
-const startButton = $("startButton");
 
 
-/************************************************
+/****************************************************
  STATUS DISPLAY
-************************************************/
+****************************************************/
 
 function showStatus(type, title, detail) {
-  const status = $("status");
-
-  status.className = "status " + type;
-
+  $("status").className = "status " + type;
   $("statusTitle").textContent = title;
   $("statusDetail").textContent = detail;
 
@@ -605,9 +626,9 @@ function showStatus(type, title, detail) {
 }
 
 
-/************************************************
+/****************************************************
  AUDIO FEEDBACK
-************************************************/
+****************************************************/
 
 function getAudioContext() {
   if (!soundEnabled) return null;
@@ -634,51 +655,44 @@ function tone(frequency, duration, delay = 0) {
 
   try {
     const ctx = getAudioContext();
-
     if (!ctx) return;
 
     const start = ctx.currentTime + delay;
-
-    const oscillator = ctx.createOscillator();
+    const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(
-      frequency, start
-    );
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(frequency, start);
 
     gain.gain.setValueAtTime(0.0001, start);
     gain.gain.exponentialRampToValueAtTime(
       0.13, start + 0.015
     );
-
     gain.gain.exponentialRampToValueAtTime(
       0.0001, start + duration
     );
 
-    oscillator.connect(gain);
+    osc.connect(gain);
     gain.connect(ctx.destination);
 
-    oscillator.start(start);
-    oscillator.stop(start + duration + 0.02);
+    osc.start(start);
+    osc.stop(start + duration + 0.02);
 
-  } catch (_) {
-    // Audio is optional.
-  }
+  } catch (_) {}
 }
 
 function detectionSound() {
-  tone(880, 0.11);
+  tone(880, 0.10);
 }
 
 function successSound() {
   tone(950, 0.12);
-  tone(1280, 0.17, 0.15);
+  tone(1300, 0.16, 0.15);
 }
 
 function errorSound() {
-  tone(300, 0.28);
-  tone(220, 0.28, 0.2);
+  tone(300, 0.26);
+  tone(220, 0.25, 0.2);
 }
 
 function toggleSound() {
@@ -698,11 +712,9 @@ function toggleSound() {
 }
 
 
-/************************************************
- VIBRATION
- Android supported where available.
- iPhone browsers may not support vibration.
-************************************************/
+/****************************************************
+ VIBRATION - ANDROID WHERE SUPPORTED
+****************************************************/
 
 function vibrate(pattern) {
   try {
@@ -713,18 +725,17 @@ function vibrate(pattern) {
 }
 
 
-/************************************************
- VISUAL FEEDBACK
-************************************************/
+/****************************************************
+ VISUAL EFFECTS
+****************************************************/
 
 function flash(type) {
   const element = $("scanFlash");
 
-  element.className = "scan-flash";
+  element.className = "flash";
   $("flashIcon").textContent =
     type === "success" ? "✓" : "✕";
 
-  // Restart the animation on repeated scans.
   void element.offsetWidth;
 
   element.classList.add(type);
@@ -734,28 +745,18 @@ function updateCounter() {
   $("scanCount").textContent = acceptedScans;
 }
 
-function setLastScan(tracking, order) {
-  $("lastScan").textContent =
-    tracking + (order ? " | Order " + order : "");
-}
 
-
-/************************************************
+/****************************************************
  USPS BARCODE VALIDATION
 
- Accept:
- - 22-digit tracking numbers starting with 9
- - Supported 420-prefixed USPS barcode formats
-
- Reject:
- - Other 2D content
- - Invalid tracking formats
- - Unrelated barcode data
-************************************************/
+ This warehouse uses 22-digit tracking numbers.
+ Supports the observed USPS 420-prefixed barcodes.
+****************************************************/
 
 function extractUspsTracking(value) {
   const raw = String(value || "").trim();
 
+  // Exclude square barcode binary payloads or letters.
   if (!/^[0-9\s]+$/.test(raw)) return null;
 
   const digits = raw.replace(/\s/g, "");
@@ -779,39 +780,34 @@ function extractUspsTracking(value) {
 }
 
 
-/************************************************
- CAMERA MANAGEMENT
-************************************************/
+/****************************************************
+ HIGH-SPEED CAMERA MANAGEMENT
+****************************************************/
 
 async function startCamera() {
-  if (busy || cameraRunning || cameraStarting) {
-    return;
-  }
+  if (busy || cameraRunning || cameraStarting) return;
 
-  clearTimeout(restartTimer);
+  clearTimeout(resumeTimer);
 
-  const code = $("accessCode").value.trim();
-
-  if (!code) {
+  if (!$("accessCode").value.trim()) {
     showStatus(
       "error",
       "Access Code Required",
-      "Enter your warehouse access code first."
+      "Enter your warehouse access code."
     );
     return;
   }
 
   cameraStarting = true;
-  startButton.disabled = true;
+  $("startButton").disabled = true;
 
   try {
-    // User interaction helps enable audio on mobile.
     getAudioContext();
 
     await scanner.start(
       { facingMode: "environment" },
       {
-        fps: 15,
+        fps: SCANNER_FPS,
         aspectRatio: 1.777778,
         disableFlip: true
       },
@@ -820,16 +816,17 @@ async function startCamera() {
     );
 
     cameraRunning = true;
+    scannerPaused = false;
 
     shell.classList.add("active");
-    shell.classList.remove("detected");
+    shell.classList.remove("detected", "saving");
 
     $("cameraPlaceholder").classList.add("hidden");
 
     showStatus(
       "ready",
       "Scanner Active",
-      "Position the long USPS barcode in the frame."
+      "Camera ready. Scan the next USPS label."
     );
 
     updateTorchButton();
@@ -838,17 +835,21 @@ async function startCamera() {
     showStatus(
       "error",
       "Camera Error",
-      error.message || "Unable to start camera."
+      String(error.message || error)
     );
 
   } finally {
     cameraStarting = false;
-    startButton.disabled = false;
+    $("startButton").disabled = false;
   }
 }
 
+
+// Stop the camera only when the employee requests it
+// or the app needs to release the device camera.
 async function stopCamera() {
-  clearTimeout(restartTimer);
+  clearTimeout(resumeTimer);
+  resumeTimer = null;
 
   if (!cameraRunning) return;
 
@@ -857,22 +858,73 @@ async function stopCamera() {
   } catch (_) {}
 
   cameraRunning = false;
+  scannerPaused = false;
   torchEnabled = false;
 
-  shell.classList.remove("active");
-  shell.classList.remove("detected");
+  shell.classList.remove(
+    "active", "detected", "saving"
+  );
 
   $("torchButton").textContent = "Flashlight";
   $("torchButton").classList.remove("on");
+
+  showStatus(
+    "ready",
+    "Camera Stopped",
+    "Tap Start Camera when ready."
+  );
 }
 
 
-/************************************************
- FLASHLIGHT
+// Pause decoding only. Keep the video running.
+function pauseDetection() {
+  if (!cameraRunning || scannerPaused) return;
 
- Only works on browsers/devices that support
- camera torch controls.
-************************************************/
+  try {
+    scanner.pause(false);
+    scannerPaused = true;
+  } catch (error) {
+    console.warn("Pause unavailable:", error);
+  }
+}
+
+
+// Resume decoding without reopening the camera.
+function resumeDetection() {
+  if (busy || document.hidden) return;
+
+  if (!cameraRunning) {
+    startCamera();
+    return;
+  }
+
+  if (scannerPaused) {
+    try {
+      scanner.resume();
+      scannerPaused = false;
+    } catch (error) {
+      showStatus(
+        "error",
+        "Scanner Recovery Needed",
+        "Tap Stop Camera and then Start Camera."
+      );
+      return;
+    }
+  }
+
+  shell.classList.remove("detected", "saving");
+
+  showStatus(
+    "ready",
+    "Ready for Next Return",
+    "Camera is active. Scan the next USPS label."
+  );
+}
+
+
+/****************************************************
+ CAMERA FLASHLIGHT
+****************************************************/
 
 function getTorchTrack() {
   try {
@@ -881,17 +933,15 @@ function getTorchTrack() {
     if (!video || !video.srcObject) return null;
 
     const tracks = video.srcObject.getVideoTracks();
-
     return tracks.length ? tracks[0] : null;
+
   } catch (_) {
     return null;
   }
 }
 
 function updateTorchButton() {
-  const button = $("torchButton");
   const track = getTorchTrack();
-
   let supported = false;
 
   try {
@@ -902,16 +952,15 @@ function updateTorchButton() {
     );
   } catch (_) {}
 
-  button.disabled = !supported;
+  $("torchButton").disabled = !supported;
 
-  button.textContent = supported
+  $("torchButton").textContent = supported
     ? "Flashlight"
     : "Flashlight Unavailable";
 }
 
 async function toggleTorch() {
   const track = getTorchTrack();
-
   if (!track) return;
 
   try {
@@ -940,24 +989,36 @@ async function toggleTorch() {
 }
 
 
-/************************************************
- SCAN DETECTION
+/****************************************************
+ BARCODE DETECTION
 
- Important:
- Only valid USPS tracking formats are submitted.
- Invalid barcode data is silently ignored.
-************************************************/
+ 1. Ignore unsupported codes.
+ 2. Ignore rapid repeat of the last accepted label.
+ 3. Pause decoding while saving.
+ 4. Never issue concurrent submissions.
+****************************************************/
 
 function onScanSuccess(decodedText) {
-  if (busy) return;
+  if (busy || scannerPaused || !cameraRunning) return;
 
   const tracking = extractUspsTracking(decodedText);
-
   if (!tracking) return;
+
+  const now = Date.now();
+
+  if (
+    tracking === lastAcceptedTracking &&
+    now - lastAcceptedTime < SAME_BARCODE_COOLDOWN_MS
+  ) {
+    return;
+  }
 
   busy = true;
 
-  shell.classList.add("detected");
+  // Stop decoding, not the camera.
+  pauseDetection();
+
+  shell.classList.add("detected", "saving");
 
   detectionSound();
   vibrate(65);
@@ -968,15 +1029,13 @@ function onScanSuccess(decodedText) {
     "Tracking " + tracking + ". Saving scan..."
   );
 
-  // Pass the original barcode to the backend.
-  // This preserves USPS routing-prefix information.
   submitBarcode(decodedText, tracking);
 }
 
 
-/************************************************
- MANUAL ENTRY
-************************************************/
+/****************************************************
+ MANUAL TRACKING ENTRY
+****************************************************/
 
 function manualSubmit() {
   if (busy) return;
@@ -992,30 +1051,45 @@ function manualSubmit() {
       "Invalid Tracking Number",
       "Enter a supported 22-digit USPS tracking number."
     );
+    return;
+  }
 
+  if (
+    tracking === lastAcceptedTracking &&
+    Date.now() - lastAcceptedTime <
+      SAME_BARCODE_COOLDOWN_MS
+  ) {
+    showStatus(
+      "error",
+      "Recently Scanned",
+      "This label was just accepted. Check Return Scans."
+    );
     return;
   }
 
   busy = true;
+  pauseDetection();
+
+  shell.classList.add("detected", "saving");
 
   detectionSound();
 
   showStatus(
     "loading",
-    "Tracking Number Accepted",
-    "Saving scan..."
+    "Tracking Detected",
+    "Saving manually entered tracking number..."
   );
 
   submitBarcode(tracking, tracking);
 }
 
 
-/************************************************
- SUBMIT SCAN TO CLOUDFLARE
+/****************************************************
+ SUBMIT TO CLOUDFLARE
 
- Success is displayed only after the backend
- confirms the scan was accepted.
-************************************************/
+ Camera remains open throughout the network request.
+ Barcode detection resumes only after confirmation.
+****************************************************/
 
 async function submitBarcode(barcode, tracking) {
   const accessCode = $("accessCode").value.trim();
@@ -1026,13 +1100,10 @@ async function submitBarcode(barcode, tracking) {
     showStatus(
       "error",
       "Access Code Required",
-      "Enter the warehouse access code."
+      "Enter warehouse access code."
     );
-
     return;
   }
-
-  await stopCamera();
 
   try {
     const response = await fetch(API_URL, {
@@ -1042,8 +1113,8 @@ async function submitBarcode(barcode, tracking) {
       },
       cache: "no-store",
       body: JSON.stringify({
-        barcode: barcode,
-        accessCode: accessCode
+        barcode,
+        accessCode
       })
     });
 
@@ -1063,16 +1134,27 @@ async function submitBarcode(barcode, tracking) {
       showStatus(
         "error",
         "Scan Not Accepted",
-        result.message || "Please check this return."
+        result.message || "Check this return."
       );
 
+      shell.classList.remove("detected", "saving");
+
       busy = false;
+
+      // Stay paused after a backend rejection.
+      // Employee can check the result and tap Resume.
+      $("startButton").textContent = "Resume Scanner";
+      $("startButton").onclick = resumeAfterError;
+
       return;
     }
 
-    // Only acknowledged scans count.
+    // The backend has acknowledged the scan.
     acceptedScans++;
     updateCounter();
+
+    lastAcceptedTracking = tracking;
+    lastAcceptedTime = Date.now();
 
     successSound();
     vibrate([70, 45, 120]);
@@ -1080,7 +1162,9 @@ async function submitBarcode(barcode, tracking) {
 
     const order = result.orderName || "";
 
-    setLastScan(tracking, order);
+    $("lastScan").textContent =
+      tracking +
+      (order ? " | Order " + order : "");
 
     if (result.dryRun) {
       showStatus(
@@ -1093,22 +1177,22 @@ async function submitBarcode(barcode, tracking) {
         "success",
         "Scan Accepted!",
         "Order " + order +
-        " saved for background Loop processing."
+        " saved for background processing."
       );
     }
 
     $("manualBarcode").value = "";
+    $("startButton").textContent = "Start Camera";
+    $("startButton").onclick = startCamera;
 
     busy = false;
 
-    // Automatically start next scan after confirmation.
-    restartTimer = setTimeout(() => {
-      startCamera();
-    }, 1200);
+    // Camera is already open. Resume barcode decoding.
+    resumeTimer = setTimeout(() => {
+      resumeDetection();
+    }, RESUME_DELAY_MS);
 
   } catch (_) {
-    busy = false;
-
     errorSound();
     vibrate([100, 70, 180]);
     flash("error");
@@ -1116,37 +1200,56 @@ async function submitBarcode(barcode, tracking) {
     showStatus(
       "error",
       "Connection Error",
-      "Scan not confirmed. Check Return Scans in " +
-      "Google Sheets before trying again."
+      "Scan not confirmed. Check Return Scans " +
+      "before retrying this package."
     );
+
+    shell.classList.remove("detected", "saving");
+
+    busy = false;
+
+    // Do not automatically resubmit after network errors.
+    $("startButton").textContent = "Resume Scanner";
+    $("startButton").onclick = resumeAfterError;
   }
 }
 
 
-/************************************************
+// The employee controls recovery after an uncertain scan.
+// Resuming does not itself submit any request.
+function resumeAfterError() {
+  if (busy) return;
+
+  $("startButton").textContent = "Start Camera";
+  $("startButton").onclick = startCamera;
+
+  resumeDetection();
+}
+
+
+/****************************************************
  PAGE VISIBILITY
 
- Stop camera if the browser is backgrounded,
- preventing unexpected camera usage.
-************************************************/
+ Release the camera when the tab is backgrounded.
+****************************************************/
 
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && cameraRunning) {
+  if (document.hidden) {
     stopCamera();
   }
 });
 
 
-/************************************************
+/****************************************************
  INITIAL STATE
-************************************************/
+****************************************************/
 
 updateCounter();
 
 showStatus(
   "ready",
   "Ready to Scan",
-  "Enter your access code and start the camera."
+  "Enter access code and start the camera."
 );
 
 </script>
