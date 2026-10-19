@@ -1,1406 +1,1231 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b1220">
-<title>Warehouse Scanner V2.1</title>
-
-<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
-<style>
-:root {
-  --bg:#f1f5f9;
-  --ink:#142139;
-  --muted:#64748b;
-  --blue:#2563eb;
-  --green:#16a34a;
-  --red:#dc2626;
-  --amber:#d97706;
-}
-
-* { box-sizing:border-box; }
-
-body {
-  margin:0;
-  padding:env(safe-area-inset-top) 14px
-          env(safe-area-inset-bottom);
-  background:var(--bg);
-  color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,
-              "Segoe UI",Arial,sans-serif;
-}
-
-.app {
-  max-width:520px;
-  margin:0 auto;
-  padding-bottom:28px;
-}
-
-header {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:19px 3px 12px;
-}
-
-h1 {
-  margin:0 0 4px;
-  font-size:23px;
-  letter-spacing:-.6px;
-}
-
-.subtitle {
-  color:var(--muted);
-  font-size:12px;
-  margin:0;
-}
-
-.counter {
-  background:white;
-  border-radius:12px;
-  padding:10px 16px;
-  min-width:92px;
-  text-align:center;
-}
-
-.counter strong {
-  display:block;
-  font-size:27px;
-  color:var(--green);
-}
-
-.counter span {
-  color:var(--muted);
-  font-size:11px;
-}
-
-.panel {
-  background:white;
-  border-radius:16px;
-  padding:15px;
-  margin:12px 0;
-  box-shadow:0 3px 14px #00000008;
-}
-
-label {
-  display:block;
-  font-size:12px;
-  font-weight:700;
-  color:#475569;
-  margin-bottom:8px;
-}
-
-input {
-  width:100%;
-  padding:14px;
-  border:1px solid #cbd5e1;
-  border-radius:10px;
-  font-size:16px;
-  color:var(--ink);
-  background:white;
-}
-
-button {
-  border:0;
-  border-radius:11px;
-  padding:14px;
-  font-size:15px;
-  font-weight:700;
-  cursor:pointer;
-  touch-action:manipulation;
-}
-
-button:disabled {
-  opacity:.5;
-  cursor:not-allowed;
-}
-
-button:focus-visible,
-input:focus-visible {
-  outline:3px solid #93c5fd;
-  outline-offset:2px;
-}
-
-.primary {
-  background:var(--blue);
-  color:white;
-}
-
-.secondary {
-  background:#e2e8f0;
-  color:#334155;
-}
-
-.controls {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:9px;
-  margin-top:12px;
-}
-
-.options {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:9px;
-  margin-top:9px;
-}
-
-.option-btn {
-  background:#f1f5f9;
-  color:#475569;
-  padding:12px 8px;
-  font-size:13px;
-}
-
-.option-btn.on {
-  background:#dbeafe;
-  color:#1d4ed8;
-}
-
-/* CAMERA */
-
-.scanner-shell {
-  position:relative;
-  background:#0b1220;
-  min-height:270px;
-  border-radius:15px;
-  overflow:hidden;
-  isolation:isolate;
-}
-
-#reader {
-  position:relative;
-  z-index:1;
-  width:100%;
-  min-height:270px;
-}
-
-#reader video {
-  display:block;
-  width:100%;
-  object-fit:cover;
-}
-
-.camera-placeholder {
-  position:absolute;
-  inset:0;
-  z-index:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding:20px;
-  color:#94a3b8;
-  font-size:14px;
-}
-
-.scan-overlay {
-  pointer-events:none;
-  position:absolute;
-  inset:0;
-  z-index:5;
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-
-.scanner-shell.active .scan-overlay {
-  display:flex;
-}
-
-.scan-frame {
-  position:relative;
-  width:88%;
-  max-width:400px;
-  height:135px;
-}
-
-.corner {
-  position:absolute;
-  width:32px;
-  height:32px;
-  border:0 solid #38bdf8;
-  transition:border-color .18s ease;
-}
-
-.tl {
-  top:0;
-  left:0;
-  border-top-width:4px;
-  border-left-width:4px;
-  border-radius:9px 0 0 0;
-}
-
-.tr {
-  top:0;
-  right:0;
-  border-top-width:4px;
-  border-right-width:4px;
-  border-radius:0 9px 0 0;
-}
-
-.bl {
-  bottom:0;
-  left:0;
-  border-bottom-width:4px;
-  border-left-width:4px;
-  border-radius:0 0 0 9px;
-}
-
-.br {
-  bottom:0;
-  right:0;
-  border-bottom-width:4px;
-  border-right-width:4px;
-  border-radius:0 0 9px 0;
-}
-
-.scan-line {
-  position:absolute;
-  top:10px;
-  left:6%;
-  width:88%;
-  height:2px;
-  background:#38bdf8;
-  box-shadow:0 0 12px 3px #38bdf899;
-  animation:scanMove 1.6s ease-in-out infinite alternate;
-}
-
-@keyframes scanMove {
-  from { transform:translateY(0); }
-  to { transform:translateY(113px); }
-}
-
-/* Keep the scanning animation moving at all times. */
-
-.scanner-shell.detected .corner {
-  border-color:#f59e0b;
-}
-
-.scanner-shell.detected .scan-line {
-  background:#f59e0b;
-  box-shadow:0 0 12px #f59e0b;
-}
-
-.scanner-shell.accepted .corner {
-  border-color:#22c55e;
-}
-
-.scanner-shell.accepted .scan-line {
-  background:#22c55e;
-  box-shadow:0 0 12px #22c55e;
-}
-
-/* FEEDBACK FLASH */
-
-.flash {
-  position:absolute;
-  inset:0;
-  z-index:10;
-  pointer-events:none;
-  opacity:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.flash.success {
-  background:#16a34ad9;
-  animation:flashIn .75s ease-out;
-}
-
-.flash.error {
-  background:#dc2626bf;
-  animation:flashIn .65s ease-out;
-}
-
-@keyframes flashIn {
-  0% {opacity:0;}
-  16% {opacity:1;}
-  65% {opacity:1;}
-  100% {opacity:0;}
-}
-
-.flash-icon {
-  font-size:90px;
-  font-weight:800;
-  color:white;
-}
-
-/* SCANNING GUIDANCE */
-
-.scanner-hint {
-  text-align:center;
-  font-size:12px;
-  color:var(--muted);
-  margin:12px 0 0;
-  min-height:20px;
-  transition:color .2s ease;
-}
-
-.scanner-hint.tip {
-  color:#1d4ed8;
-  font-weight:600;
-}
-
-/* STATUS */
-
-.status {
-  display:flex;
-  align-items:center;
-  gap:13px;
-  min-height:90px;
-  padding:17px;
-  border-radius:14px;
-  border:1px solid #cbd5e1;
-  background:#e2e8f0;
-}
-
-.status-icon {
-  font-size:31px;
-  width:39px;
-  flex-shrink:0;
-  text-align:center;
-}
-
-.status-title {
-  font-size:17px;
-  font-weight:800;
-  margin-bottom:4px;
-}
-
-.status-detail {
-  font-size:13px;
-  line-height:1.5;
-  overflow-wrap:anywhere;
-}
-
-.status.ready {
-  background:#dbeafe;
-  color:#1e40af;
-  border-color:#bfdbfe;
-}
-
-.status.loading {
-  background:#fef3c7;
-  color:#92400e;
-  border-color:#fde68a;
-}
-
-.status.success {
-  background:#dcfce7;
-  color:#166534;
-  border-color:#bbf7d0;
-}
-
-.status.error {
-  background:#fee2e2;
-  color:#991b1b;
-  border-color:#fecaca;
-}
-
-.last-scan {
-  background:white;
-  border-radius:12px;
-  padding:13px;
-  margin-top:11px;
-  font-size:13px;
-  color:#475569;
-  overflow-wrap:anywhere;
-}
-
-.last-scan strong {
-  color:#0f172a;
-}
-
-.section-title {
-  font-size:15px;
-  margin:2px 0 12px;
-}
-
-.manual-button {
-  width:100%;
-  margin-top:10px;
-}
-
-.note {
-  color:var(--muted);
-  text-align:center;
-  font-size:12px;
-  line-height:1.6;
-  margin:16px 6px;
-}
-
-.mode {
-  display:inline-block;
-  font-size:11px;
-  font-weight:700;
-  padding:5px 9px;
-  margin-top:8px;
-  border-radius:20px;
-  background:#dcfce7;
-  color:#166534;
-}
-
-.hidden {
-  display:none !important;
-}
-
-@media (prefers-reduced-motion:reduce) {
-  .scan-line {
-    animation:none;
-    top:50%;
-  }
-
-  .flash.success,
-  .flash.error {
-    animation:none;
-    opacity:.5;
-  }
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <title>Warehouse Return Scanner V2.2</title>
+
+  <script src="https://unpkg.com/html5-qrcode" defer></script>
+
+  <style>
+    :root {
+      --bg: #eef3fb;
+      --card: #ffffff;
+      --text: #253046;
+      --muted: #6e7a92;
+      --line: #dfe6f2;
+      --blue: #5d86ff;
+      --blue-soft: #dce8ff;
+      --green: #25b56a;
+      --green-soft: #dff6e9;
+      --red: #e35656;
+      --red-soft: #ffe4e4;
+      --amber: #f5a524;
+      --amber-soft: #fff1d6;
+      --shadow: 0 14px 32px rgba(31, 50, 89, 0.08);
+      --radius: 22px;
+      --radius-sm: 16px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+      padding:
+        calc(14px + var(--safe-top))
+        14px
+        calc(20px + var(--safe-bottom));
+    }
+
+    .topbar {
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+      margin-bottom: 14px;
+    }
+
+    .title-card,
+    .stats-card,
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .title-card {
+      flex: 1;
+      padding: 16px 16px 14px;
+    }
+
+    .version {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .title-card h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      margin-top: 5px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .mode-pill {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: var(--green);
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .stats-card {
+      width: 152px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-content: center;
+    }
+
+    .stat {
+      background: #f6f8fd;
+      border-radius: 16px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+
+    .card {
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .card-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .collapse-btn {
+      appearance: none;
+      border: none;
+      background: #f4f7fc;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .access-body.hidden {
+      display: none;
+    }
+
+    .access-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .access-input {
+      flex: 1;
+      height: 54px;
+      border: 2px solid var(--line);
+      border-radius: 16px;
+      padding: 0 16px;
+      font-size: 18px;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    .access-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(93, 134, 255, 0.12);
+    }
+
+    .save-code-btn {
+      appearance: none;
+      border: none;
+      background: var(--blue);
+      color: white;
+      height: 54px;
+      min-width: 100px;
+      padding: 0 16px;
+      border-radius: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .micro-copy {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .saved-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--green);
+      background: var(--green-soft);
+      border-radius: 999px;
+      padding: 7px 12px;
+    }
+
+    .scanner-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .live-badge {
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      background: #f3f6fc;
+      color: var(--muted);
+    }
+
+    .live-badge.live {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .live-badge.busy {
+      background: var(--amber-soft);
+      color: #a86b00;
+    }
+
+    .live-badge.error {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .camera-shell {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      background: #111827;
+      border-radius: 24px;
+      min-height: 300px;
+      border: 2px solid #dfe5ef;
+    }
+
+    #reader {
+      width: 100%;
+    }
+
+    #reader video {
+      width: 100% !important;
+      height: auto !important;
+      display: block !important;
+      object-fit: cover !important;
+      border-radius: 22px;
+      background: #111827;
+    }
+
+    #reader__dashboard_section_csr,
+    #reader__dashboard,
+    #reader__scan_region img {
+      display: none !important;
+    }
+
+    .scanner-overlay {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+    }
+
+    .scan-frame {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(84%, 520px);
+      height: min(38vw, 180px);
+      max-height: 180px;
+      transform: translate(-50%, -50%);
+      border-radius: 24px;
+    }
+
+    .corner {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-color: #f5a524;
+      border-style: solid;
+      border-width: 0;
+    }
+
+    .corner.tl {
+      left: 0;
+      top: 0;
+      border-left-width: 5px;
+      border-top-width: 5px;
+      border-top-left-radius: 18px;
+    }
+
+    .corner.tr {
+      right: 0;
+      top: 0;
+      border-right-width: 5px;
+      border-top-width: 5px;
+      border-top-right-radius: 18px;
+    }
+
+    .corner.bl {
+      left: 0;
+      bottom: 0;
+      border-left-width: 5px;
+      border-bottom-width: 5px;
+      border-bottom-left-radius: 18px;
+    }
+
+    .corner.br {
+      right: 0;
+      bottom: 0;
+      border-right-width: 5px;
+      border-bottom-width: 5px;
+      border-bottom-right-radius: 18px;
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 7%;
+      right: 7%;
+      top: 50%;
+      height: 3px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, #ffae00, transparent);
+      box-shadow: 0 0 12px rgba(255, 174, 0, 0.65);
+      transform: translateY(-50%);
+      animation: sweep 2s linear infinite;
+      opacity: 0.95;
+    }
+
+    @keyframes sweep {
+      0% { transform: translateY(-42px); }
+      50% { transform: translateY(42px); }
+      100% { transform: translateY(-42px); }
+    }
+
+    .scan-flash {
+      position: absolute;
+      inset: 0;
+      background: rgba(37, 181, 106, 0.12);
+      opacity: 0;
+      transition: opacity 180ms ease;
+    }
+
+    .scan-flash.show {
+      opacity: 1;
+    }
+
+    .overlay-status {
+      position: absolute;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      max-width: calc(100% - 24px);
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.75);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    .below-status {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .status-text {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .hint-text {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .result-pill {
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: #f3f6fc;
+      color: var(--muted);
+    }
+
+    .result-pill.success {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .result-pill.error {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .result-pill.busy {
+      background: var(--amber-soft);
+      color: #9a6700;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .action-btn {
+      appearance: none;
+      border: none;
+      border-radius: 18px;
+      min-height: 54px;
+      padding: 12px 14px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      background: #edf2fb;
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px rgba(37, 48, 70, 0.04);
+    }
+
+    .action-btn.primary {
+      background: var(--blue-soft);
+      color: #244bca;
+    }
+
+    .action-btn.active {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .action-btn.warn {
+      background: #edf2fb;
+      color: var(--text);
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .detail-box {
+      background: #f7f9fe;
+      border-radius: 16px;
+      padding: 12px;
+      min-height: 74px;
+    }
+
+    .detail-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .detail-value {
+      font-size: 14px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .detail-value.mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(18px + var(--safe-bottom));
+      transform: translateX(-50%) translateY(20px);
+      min-width: min(90vw, 420px);
+      max-width: min(92vw, 480px);
+      background: rgba(25, 31, 47, 0.96);
+      color: #fff;
+      padding: 14px 16px;
+      border-radius: 16px;
+      box-shadow: 0 18px 32px rgba(0, 0, 0, 0.24);
+      font-size: 14px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 180ms ease;
+      z-index: 9999;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.success {
+      background: rgba(19, 122, 70, 0.96);
+    }
+
+    .toast.error {
+      background: rgba(186, 54, 54, 0.96);
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        flex-direction: column;
+      }
+
+      .stats-card {
+        width: 100%;
+      }
+
+      .scan-frame {
+        width: 86%;
+        height: 140px;
+      }
+
+      .title-card h1 {
+        font-size: 22px;
+      }
+
+      .camera-shell {
+        min-height: 260px;
+      }
+
+      .action-btn {
+        min-height: 52px;
+        font-size: 15px;
+      }
+    }
+  </style>
 </head>
-
 <body>
-<div class="app">
+  <div class="app">
+    <div class="topbar">
+      <div class="title-card">
+        <div class="version">V2.2</div>
+        <h1>Warehouse Return Scanner</h1>
+        <div class="subtitle">USPS Return Processing</div>
+        <div class="mode-pill">High-Speed Mode</div>
+      </div>
 
-<header>
-  <div>
-    <h1>Warehouse Scanner V2.1</h1>
-    <p class="subtitle">USPS Return Processing</p>
-    <span class="mode">HIGH-SPEED MODE</span>
-  </div>
-
-  <div class="counter">
-    <strong id="scanCount">0</strong>
-    <span>Accepted Scans</span>
-  </div>
-</header>
-
-<section class="panel">
-  <label for="accessCode">Warehouse Access Code</label>
-  <input
-    type="password"
-    id="accessCode"
-    placeholder="Enter access code"
-    autocomplete="off"
-    autocapitalize="none"
-  >
-</section>
-
-<section class="panel">
-  <div class="scanner-shell" id="scannerShell">
-
-    <div class="camera-placeholder" id="cameraPlaceholder">
-      Tap Start Camera to begin scanning
-    </div>
-
-    <div id="reader"></div>
-
-    <div class="scan-overlay">
-      <div class="scan-frame">
-        <div class="corner tl"></div>
-        <div class="corner tr"></div>
-        <div class="corner bl"></div>
-        <div class="corner br"></div>
-        <div class="scan-line"></div>
+      <div class="stats-card">
+        <div class="stat">
+          <span class="stat-value" id="acceptedCount">0</span>
+          <span class="stat-label">Accepted</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="scanCount">0</span>
+          <span class="stat-label">Scans</span>
+        </div>
       </div>
     </div>
 
-    <div id="scanFlash" class="flash">
-      <span id="flashIcon" class="flash-icon">✓</span>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Warehouse Access Code</div>
+          <div class="card-subtitle">Stored only on this device browser</div>
+        </div>
+        <button class="collapse-btn" id="toggleAccessBtn">Collapse</button>
+      </div>
+
+      <div class="access-body" id="accessBody">
+        <div class="access-row">
+          <input
+            id="accessCode"
+            class="access-input"
+            type="password"
+            placeholder="Enter access code"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+          />
+          <button class="save-code-btn" id="saveCodeBtn">Save</button>
+        </div>
+        <div class="micro-copy">
+          Save once and the scanner will remember it on this phone/laptop.
+        </div>
+      </div>
+
+      <div id="savedCodePill" class="saved-pill" style="display:none;">
+        Access code saved on this device
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="scanner-head">
+        <div>
+          <div class="card-title">Live Scanner</div>
+          <div class="card-subtitle" id="helperText">
+            Align the long USPS barcode inside the frame
+          </div>
+        </div>
+        <div class="live-badge" id="liveBadge">Idle</div>
+      </div>
+
+      <div class="camera-shell">
+        <div id="reader"></div>
+
+        <div class="scanner-overlay">
+          <div class="scan-frame">
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+            <div class="scan-line"></div>
+          </div>
+
+          <div class="scan-flash" id="scanFlash"></div>
+
+          <div class="overlay-status" id="overlayStatus">
+            Ready to scan
+          </div>
+        </div>
+      </div>
+
+      <div class="below-status">
+        <div>
+          <div class="status-text" id="statusText">Ready</div>
+          <div class="hint-text" id="statusHint">
+            Keep the long barcode centered and horizontal
+          </div>
+        </div>
+        <div class="result-pill" id="resultPill">Waiting</div>
+      </div>
+
+      <div class="action-grid">
+        <button class="action-btn primary" id="startBtn">Start Camera</button>
+        <button class="action-btn warn" id="stopBtn">Stop Camera</button>
+        <button class="action-btn" id="soundBtn">🔊 Sound On</button>
+        <button class="action-btn" id="torchBtn">Flashlight</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="margin-bottom:10px;">
+        <div>
+          <div class="card-title">Latest Scan</div>
+          <div class="card-subtitle">Most recent barcode activity</div>
+        </div>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-box">
+          <div class="detail-label">Last Barcode</div>
+          <div class="detail-value mono" id="lastBarcode">—</div>
+        </div>
+        <div class="detail-box">
+          <div class="detail-label">Last Result</div>
+          <div class="detail-value" id="lastResult">Waiting for scan</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <p class="scanner-hint" id="scannerHint">
-    Align the long USPS barcode inside the frame.
-  </p>
-
-  <div class="controls">
-    <button
-      class="primary"
-      id="startButton"
-      onclick="startCamera()">
-      Start Camera
-    </button>
-
-    <button
-      class="secondary"
-      id="stopButton"
-      onclick="stopCamera()">
-      Stop Camera
-    </button>
-  </div>
-
-  <div class="options">
-    <button
-      class="option-btn on"
-      id="soundButton"
-      onclick="toggleSound()">
-      🔊 Sound On
-    </button>
-
-    <button
-      class="option-btn"
-      id="torchButton"
-      onclick="toggleTorch()">
-      Flashlight
-    </button>
-  </div>
-</section>
-
-<section
-  class="status ready"
-  id="status"
-  role="status"
-  aria-live="polite">
-
-  <div class="status-icon" id="statusIcon">◎</div>
-
-  <div>
-    <div class="status-title" id="statusTitle">
-      Ready to Scan
-    </div>
-
-    <div class="status-detail" id="statusDetail">
-      Enter access code and start camera.
-    </div>
-  </div>
-</section>
-
-<div class="last-scan">
-  <strong>Last Scan:</strong>
-  <span id="lastScan">No scans yet</span>
-</div>
-
-<section class="panel">
-  <h3 class="section-title">Manual Tracking Entry</h3>
-
-  <input
-    type="text"
-    id="manualBarcode"
-    inputmode="numeric"
-    placeholder="Enter USPS tracking number"
-    autocomplete="off"
-  >
-
-  <button
-    class="primary manual-button"
-    id="manualButton"
-    onclick="manualSubmit()">
-    Submit Tracking Number
-  </button>
-</section>
-
-<p class="note">
-  A successful scan means Google Sheets accepted the
-  return for background processing. Final refund
-  or exchange results are tracked separately.
-</p>
-
-</div>
-
-<script>
-"use strict";
-
-/****************************************************
- CONFIGURATION
-****************************************************/
-
-const API_URL =
-  "https://warehouse-scanner-bridge.rahil-570.workers.dev";
-
-// Decode the long USPS Code 128 barcode.
-const scanner = new Html5Qrcode("reader", {
-  formatsToSupport: [
-    Html5QrcodeSupportedFormats.CODE_128
-  ],
-  useBarCodeDetectorIfSupported: true,
-  verbose: false
-});
-
-const SCANNER_FPS = 20;
-
-// Short visual acknowledgement, without pausing
-// the video or barcode decoder.
-const SUCCESS_FEEDBACK_MS = 650;
-
-// Ignore the same successfully saved tracking number
-// for a short period, reducing accidental re-scans.
-const SAME_BARCODE_COOLDOWN_MS = 15000;
-
-const DEFAULT_HINT =
-  "Align the long USPS barcode inside the frame.";
-
-let cameraRunning = false;
-let cameraStarting = false;
-let stoppingCamera = false;
-
-let busy = false;
-let scanArmed = true;
-let soundEnabled = true;
-let torchEnabled = false;
-let audioContext = null;
-let acceptedScans = 0;
-
-let lastAcceptedTracking = "";
-let lastAcceptedTime = 0;
-
-let hintTimer = null;
-let readyTimer = null;
-let hintStartedAt = 0;
-let hintText = "";
-
-const $ = id => document.getElementById(id);
-const shell = $("scannerShell");
-
-
-/****************************************************
- DISPLAY HELPERS
-****************************************************/
-
-function showStatus(type, title, detail) {
-  $("status").className = "status " + type;
-  $("statusTitle").textContent = title;
-  $("statusDetail").textContent = detail;
-
-  const icons = {
-    ready: "◎",
-    loading: "◉",
-    success: "✓",
-    error: "✕"
-  };
-
-  $("statusIcon").textContent = icons[type] || "◎";
-}
-
-function showHint(text, isTip = false) {
-  if (hintText === text &&
-      $("scannerHint").classList.contains("tip") === isTip) {
-    return;
-  }
-
-  hintText = text;
-  $("scannerHint").textContent = text;
-  $("scannerHint").classList.toggle("tip", isTip);
-}
-
-function updateCounter() {
-  $("scanCount").textContent = acceptedScans;
-}
-
-function updateLastScan(tracking, order) {
-  $("lastScan").textContent =
-    tracking + (order ? " | Order " + order : "");
-}
-
-
-/****************************************************
- SMART SCANNING GUIDANCE
-
- Suggestions are based on elapsed time only.
- They do not claim to measure focus or distance.
-****************************************************/
-
-function stopHints() {
-  if (hintTimer !== null) {
-    clearInterval(hintTimer);
-    hintTimer = null;
-  }
-}
-
-function startHints() {
-  stopHints();
-
-  hintStartedAt = Date.now();
-  showHint(DEFAULT_HINT);
-
-  hintTimer = setInterval(() => {
-    if (!cameraRunning || !scanArmed || busy ||
-        document.hidden) {
-      return;
-    }
-
-    const seconds =
-      (Date.now() - hintStartedAt) / 1000;
-
-    if (seconds < 5) {
-      showHint(DEFAULT_HINT);
-
-    } else if (seconds < 11) {
-      showHint(
-        "Try moving closer or adjusting the angle.",
-        true
-      );
-
-    } else if (seconds < 17) {
-      showHint(
-        "Move back slightly to fit the full barcode.",
-        true
-      );
-
-    } else {
-      // Repeat useful suggestions without accumulating
-      // multiple independent timers.
-      hintStartedAt = Date.now();
-      showHint(DEFAULT_HINT);
-    }
-  }, 500);
-}
-
-
-/****************************************************
- AUDIO
-****************************************************/
-
-function getAudioContext() {
-  if (!soundEnabled) return null;
-
-  if (!audioContext) {
-    const AudioClass =
-      window.AudioContext ||
-      window.webkitAudioContext;
-
-    if (!AudioClass) return null;
-
-    audioContext = new AudioClass();
-  }
-
-  if (audioContext.state === "suspended") {
-    audioContext.resume().catch(() => {});
-  }
-
-  return audioContext;
-}
-
-function tone(frequency, duration, delay = 0) {
-  if (!soundEnabled) return;
-
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const start = ctx.currentTime + delay;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(frequency, start);
-
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(
-      0.13, start + 0.015
-    );
-    gain.gain.exponentialRampToValueAtTime(
-      0.0001, start + duration
-    );
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(start);
-    osc.stop(start + duration + 0.02);
-
-  } catch (_) {
-    // Audio is optional.
-  }
-}
-
-function detectionSound() {
-  tone(880, 0.1);
-}
-
-function successSound() {
-  tone(950, 0.12);
-  tone(1300, 0.16, 0.15);
-}
-
-function errorSound() {
-  tone(300, 0.26);
-  tone(220, 0.25, 0.2);
-}
-
-function toggleSound() {
-  soundEnabled = !soundEnabled;
-
-  $("soundButton").textContent =
-    soundEnabled ? "🔊 Sound On" : "🔇 Sound Off";
-
-  $("soundButton").classList.toggle(
-    "on", soundEnabled
-  );
-
-  if (soundEnabled) {
-    getAudioContext();
-    detectionSound();
-  }
-}
-
-
-/****************************************************
- VIBRATION
-****************************************************/
-
-function vibrate(pattern) {
-  try {
-    if (typeof navigator.vibrate === "function") {
-      navigator.vibrate(pattern);
-    }
-  } catch (_) {}
-}
-
-
-/****************************************************
- GREEN/RED FLASH
-****************************************************/
-
-function flash(type) {
-  const element = $("scanFlash");
-
-  element.className = "flash";
-  $("flashIcon").textContent =
-    type === "success" ? "✓" : "✕";
-
-  void element.offsetWidth;
-
-  element.classList.add(type);
-}
-
-
-/****************************************************
- USPS TRACKING VALIDATION
-****************************************************/
-
-function extractUspsTracking(value) {
-  const raw = String(value || "").trim();
-
-  if (!/^[0-9\s]+$/.test(raw)) return null;
-
-  const digits = raw.replace(/\s/g, "");
-
-  // Observed 22-digit USPS tracking format.
-  if (/^9\d{21}$/.test(digits)) {
-    return digits;
-  }
-
-  // Observed routing-prefixed formats.
-  if (
-    digits.startsWith("420") &&
-    (digits.length === 30 || digits.length === 34)
-  ) {
-    const tracking = digits.slice(-22);
-
-    if (/^9\d{21}$/.test(tracking)) {
-      return tracking;
-    }
-  }
-
-  return null;
-}
-
-
-/****************************************************
- CAMERA CONTROLS
-****************************************************/
-
-async function startCamera() {
-  if (cameraRunning || cameraStarting ||
-      stoppingCamera || busy) return;
-
-  if (!$("accessCode").value.trim()) {
-    showStatus(
-      "error",
-      "Access Code Required",
-      "Enter your warehouse access code."
-    );
-    return;
-  }
-
-  clearTimeout(readyTimer);
-
-  cameraStarting = true;
-  $("startButton").disabled = true;
-
-  try {
-    // Called through a button to help unlock audio.
-    getAudioContext();
-
-    await scanner.start(
-      { facingMode: "environment" },
-      {
-        fps: SCANNER_FPS,
-        aspectRatio: 1.777778,
-        disableFlip: true
-      },
-      onScanSuccess,
-      function() {}
-    );
-
-    cameraRunning = true;
-    scanArmed = true;
-
-    shell.classList.add("active");
-    shell.classList.remove("detected", "accepted");
-
-    $("cameraPlaceholder").classList.add("hidden");
-
-    $("startButton").textContent = "Camera Running";
-    $("startButton").disabled = true;
-
-    showStatus(
-      "ready",
-      "Scanner Active",
-      "Camera ready. Scan the next USPS label."
-    );
-
-    startHints();
-    updateTorchButton();
-
-  } catch (error) {
-    scanArmed = false;
-
-    showStatus(
-      "error",
-      "Camera Error",
-      String(error.message || error)
-    );
-
-  } finally {
-    cameraStarting = false;
-
-    if (!cameraRunning) {
-      $("startButton").disabled = false;
-      $("startButton").textContent = "Start Camera";
-    }
-  }
-}
-
-async function stopCamera() {
-  if (stoppingCamera) return;
-
-  clearTimeout(readyTimer);
-  readyTimer = null;
-
-  stopHints();
-  scanArmed = false;
-
-  if (!cameraRunning) return;
-
-  stoppingCamera = true;
-
-  try {
-    await scanner.stop();
-  } catch (error) {
-    console.warn("Camera stop:", error);
-  } finally {
-    cameraRunning = false;
-    stoppingCamera = false;
-    torchEnabled = false;
-
-    shell.classList.remove(
-      "active", "detected", "accepted"
-    );
-
-    $("startButton").disabled = false;
-    $("startButton").textContent = "Start Camera";
-
-    $("torchButton").textContent = "Flashlight";
-    $("torchButton").classList.remove("on");
-    $("torchButton").disabled = true;
-
-    showHint(DEFAULT_HINT);
-
-    showStatus(
-      "ready",
-      "Camera Stopped",
-      "Tap Start Camera when you're ready."
-    );
-  }
-}
-
-
-/****************************************************
- FLASHLIGHT
-****************************************************/
-
-function getTorchTrack() {
-  try {
-    const video = $("reader").querySelector("video");
-
-    if (!video || !video.srcObject) {
-      return null;
-    }
-
-    const tracks = video.srcObject.getVideoTracks();
-
-    return tracks.length ? tracks[0] : null;
-  } catch (_) {
-    return null;
-  }
-}
-
-function updateTorchButton() {
-  const track = getTorchTrack();
-  let supported = false;
-
-  try {
-    supported = !!(
-      track &&
-      typeof track.getCapabilities === "function" &&
-      track.getCapabilities().torch
-    );
-  } catch (_) {}
-
-  $("torchButton").disabled = !supported;
-
-  $("torchButton").textContent =
-    supported ? "Flashlight" : "Flashlight Unavailable";
-}
-
-async function toggleTorch() {
-  const track = getTorchTrack();
-  if (!track) return;
-
-  try {
-    const caps = track.getCapabilities();
-
-    if (!caps.torch) return;
-
-    const next = !torchEnabled;
-
-    await track.applyConstraints({
-      advanced: [{torch: next}]
-    });
-
-    torchEnabled = next;
-
-    $("torchButton").textContent =
-      next ? "Flashlight On" : "Flashlight";
-
-    $("torchButton").classList.toggle("on", next);
-
-  } catch (_) {
-    torchEnabled = false;
-    $("torchButton").textContent = "Flashlight Unavailable";
-  }
-}
-
-
-/****************************************************
- DETECTION
-
- Camera and animation keep moving.
- Only callbacks are temporarily ignored during saving.
-****************************************************/
-
-function onScanSuccess(decodedText) {
-  if (!cameraRunning || !scanArmed || busy ||
-      document.hidden) return;
-
-  const tracking = extractUspsTracking(decodedText);
-
-  if (!tracking) return;
-
-  if (
-    tracking === lastAcceptedTracking &&
-    Date.now() - lastAcceptedTime <
-      SAME_BARCODE_COOLDOWN_MS
-  ) {
-    return;
-  }
-
-  busy = true;
-  scanArmed = false;
-
-  stopHints();
-  clearTimeout(readyTimer);
-
-  shell.classList.add("detected");
-  shell.classList.remove("accepted");
-
-  detectionSound();
-  vibrate(65);
-
-  showHint("Barcode recognized — saving scan...");
-
-  showStatus(
-    "loading",
-    "Barcode Detected",
-    "Tracking " + tracking + ". Saving scan..."
-  );
-
-  submitBarcode(decodedText, tracking);
-}
-
-
-/****************************************************
- MANUAL ENTRY
-****************************************************/
-
-function manualSubmit() {
-  if (busy) return;
-
-  const value = $("manualBarcode").value.trim();
-  const tracking = extractUspsTracking(value);
-
-  if (!tracking) {
-    errorSound();
-
-    showStatus(
-      "error",
-      "Invalid Tracking Number",
-      "Enter a supported 22-digit USPS tracking number."
-    );
-    return;
-  }
-
-  if (
-    tracking === lastAcceptedTracking &&
-    Date.now() - lastAcceptedTime <
-      SAME_BARCODE_COOLDOWN_MS
-  ) {
-    showStatus(
-      "error",
-      "Recently Scanned",
-      "This label was just accepted. Check Return Scans."
-    );
-    return;
-  }
-
-  busy = true;
-  scanArmed = false;
-
-  stopHints();
-  clearTimeout(readyTimer);
-
-  shell.classList.add("detected");
-
-  detectionSound();
-
-  showHint("Saving manually entered tracking...");
-
-  showStatus(
-    "loading",
-    "Tracking Detected",
-    "Saving manually entered tracking number..."
-  );
-
-  submitBarcode(tracking, tracking);
-}
-
-
-/****************************************************
- SEND SCAN TO CLOUDFLARE
-
- The camera remains live during the entire request.
-****************************************************/
-
-async function submitBarcode(barcode, tracking) {
-  const accessCode = $("accessCode").value.trim();
-
-  if (!accessCode) {
-    busy = false;
-
-    scanArmed = false;
-    showScanError(
-      "Access Code Required",
-      "Enter your warehouse access code."
-    );
-
-    return;
-  }
-
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      cache: "no-store",
-      body: JSON.stringify({
-        barcode: barcode,
-        accessCode: accessCode
-      })
-    });
-
-    let result;
-
-    try {
-      result = await response.json();
-    } catch (_) {
-      throw new Error("Invalid backend response.");
-    }
-
-    if (!response.ok || !result.ok) {
-      showScanError(
-        "Scan Not Accepted",
-        result.message || "Please check this return."
-      );
-      return;
-    }
-
-    // Count only acknowledged scans.
-    acceptedScans++;
-    updateCounter();
-
-    lastAcceptedTracking = tracking;
-    lastAcceptedTime = Date.now();
-
-    successSound();
-    vibrate([70, 45, 120]);
-    flash("success");
-
-    const order = String(result.orderName || "");
-
-    updateLastScan(tracking, order);
-
-    shell.classList.remove("detected");
-    shell.classList.add("accepted");
-
-    if (result.dryRun) {
-      showStatus(
-        "success",
-        "Test Scan Successful",
-        result.message || "Nothing processed."
-      );
-
-    } else {
-      showStatus(
-        "success",
-        "Scan Accepted!",
-        "Order " + order +
-        " saved for background processing."
-      );
-    }
-
-    showHint("Scan accepted — prepare the next package.");
-
-    $("manualBarcode").value = "";
-
-    busy = false;
-
-    // Short visual confirmation only.
-    // No camera stop, restart, pause or resume.
-    readyTimer = setTimeout(() => {
-      if (!cameraRunning || document.hidden || busy) {
-        return;
+  <div class="toast" id="toast"></div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const CONFIG = {
+        WORKER_URL: "https://warehouse-scanner-bridge.rahil-570.workers.dev",
+        SCAN_COOLDOWN_MS: 1800,
+        PROCESS_TIMEOUT_MS: 20000,
+        CAMERA_FPS: 12,
+        USE_REMEMBERED_CAMERA: true
+      };
+
+      const state = {
+        html5QrCode: null,
+        cameraRunning: false,
+        soundOn: true,
+        torchOn: false,
+        processing: false,
+        lastScanValue: "",
+        lastScanAt: 0,
+        accepted: 0,
+        totalScans: 0,
+        lastCameraId: "",
+        accessCollapsed: false
+      };
+
+      const els = {
+        accessCode: document.getElementById("accessCode"),
+        saveCodeBtn: document.getElementById("saveCodeBtn"),
+        toggleAccessBtn: document.getElementById("toggleAccessBtn"),
+        accessBody: document.getElementById("accessBody"),
+        savedCodePill: document.getElementById("savedCodePill"),
+
+        startBtn: document.getElementById("startBtn"),
+        stopBtn: document.getElementById("stopBtn"),
+        soundBtn: document.getElementById("soundBtn"),
+        torchBtn: document.getElementById("torchBtn"),
+
+        acceptedCount: document.getElementById("acceptedCount"),
+        scanCount: document.getElementById("scanCount"),
+
+        liveBadge: document.getElementById("liveBadge"),
+        helperText: document.getElementById("helperText"),
+        statusText: document.getElementById("statusText"),
+        statusHint: document.getElementById("statusHint"),
+        resultPill: document.getElementById("resultPill"),
+        overlayStatus: document.getElementById("overlayStatus"),
+        scanFlash: document.getElementById("scanFlash"),
+
+        lastBarcode: document.getElementById("lastBarcode"),
+        lastResult: document.getElementById("lastResult"),
+        toast: document.getElementById("toast")
+      };
+
+      const helperMessages = [
+        "Align the long USPS barcode inside the frame",
+        "Move closer if the barcode looks small",
+        "Move back slightly if the barcode is cropped",
+        "Keep the barcode horizontal and hold steady"
+      ];
+
+      let helperIndex = 0;
+      setInterval(() => {
+        if (!state.processing) {
+          helperIndex = (helperIndex + 1) % helperMessages.length;
+          els.helperText.textContent = helperMessages[helperIndex];
+        }
+      }, 2600);
+
+      init();
+
+      function init() {
+        const savedCode = localStorage.getItem("warehouseAccessCode") || "";
+        if (savedCode) {
+          els.accessCode.value = savedCode;
+          showSavedCodeState(true);
+        }
+
+        const savedCameraId = localStorage.getItem("preferredCameraId") || "";
+        if (savedCameraId) {
+          state.lastCameraId = savedCameraId;
+        }
+
+        bindEvents();
+        refreshStats();
+        setLiveBadge("Idle", "idle");
+        setResultPill("Waiting", "neutral");
+        setStatus("Ready", "Keep the long barcode centered and horizontal");
       }
 
-      shell.classList.remove("detected", "accepted");
+      function bindEvents() {
+        els.saveCodeBtn.addEventListener("click", saveAccessCode);
+        els.toggleAccessBtn.addEventListener("click", toggleAccess);
+        els.startBtn.addEventListener("click", startCamera);
+        els.stopBtn.addEventListener("click", stopCamera);
+        els.soundBtn.addEventListener("click", toggleSound);
+        els.torchBtn.addEventListener("click", toggleTorch);
+      }
 
-      scanArmed = true;
+      function saveAccessCode() {
+        const code = els.accessCode.value.trim();
+        if (!code) {
+          showToast("Enter the warehouse access code first.", "error");
+          return;
+        }
+        localStorage.setItem("warehouseAccessCode", code);
+        showSavedCodeState(true);
+        showToast("Access code saved on this device.", "success");
+      }
 
-      showStatus(
-        "ready",
-        "Ready for Next Return",
-        "Scanner active. Scan the next USPS label."
-      );
+      function showSavedCodeState(saved) {
+        els.savedCodePill.style.display = saved ? "inline-flex" : "none";
+      }
 
-      startHints();
-    }, SUCCESS_FEEDBACK_MS);
+      function toggleAccess() {
+        state.accessCollapsed = !state.accessCollapsed;
+        els.accessBody.classList.toggle("hidden", state.accessCollapsed);
+        els.toggleAccessBtn.textContent = state.accessCollapsed ? "Expand" : "Collapse";
+      }
 
-  } catch (error) {
-    showScanError(
-      "Connection Error",
-      "Scan not confirmed. Check Return Scans in " +
-      "Google Sheets before trying again."
-    );
-  }
-}
+      async function startCamera() {
+        if (state.cameraRunning) return;
 
+        if (!window.Html5Qrcode) {
+          showToast("Scanner library did not load.", "error");
+          return;
+        }
 
-/****************************************************
- ERROR RECOVERY
+        const accessCode = getAccessCode();
+        if (!accessCode) {
+          showToast("Please save the warehouse access code first.", "error");
+          return;
+        }
 
- Do not automatically start scanning again after
- a backend rejection or uncertain network result.
-****************************************************/
+        try {
+          state.html5QrCode = new Html5Qrcode("reader");
+          const cameras = await Html5Qrcode.getCameras();
 
-function showScanError(title, message) {
-  busy = false;
-  scanArmed = false;
-  stopHints();
+          if (!cameras || !cameras.length) {
+            throw new Error("No camera found on this device.");
+          }
 
-  shell.classList.remove("detected", "accepted");
+          let chosenCamera = cameras[0];
 
-  errorSound();
-  vibrate([100, 70, 180]);
-  flash("error");
+          const backLike = cameras.find(c =>
+            /back|rear|environment/i.test(c.label || "")
+          );
+          if (backLike) chosenCamera = backLike;
 
-  showStatus("error", title, message);
+          if (CONFIG.USE_REMEMBERED_CAMERA && state.lastCameraId) {
+            const remembered = cameras.find(c => c.id === state.lastCameraId);
+            if (remembered) chosenCamera = remembered;
+          }
 
-  showHint(
-    "Review the error, then tap Resume Scanning.",
-    true
-  );
+          state.lastCameraId = chosenCamera.id;
+          localStorage.setItem("preferredCameraId", chosenCamera.id);
 
-  // Camera preview remains live.
-  // Decoding is ignored until staff explicitly resume.
-  $("startButton").disabled = false;
-  $("startButton").textContent = "Resume Scanning";
-  $("startButton").onclick = resumeAfterError;
-}
+          const formats = [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.CODE_93,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.QR_CODE
+          ];
 
-function resumeAfterError() {
-  if (busy || cameraStarting || stoppingCamera) return;
+          await state.html5QrCode.start(
+            { deviceId: { exact: chosenCamera.id } },
+            {
+              fps: CONFIG.CAMERA_FPS,
+              qrbox: (vw, vh) => {
+                const width = Math.min(vw * 0.84, 520);
+                const height = Math.min(Math.max(vh * 0.22, 120), 180);
+                return { width, height };
+              },
+              aspectRatio: 1.777,
+              rememberLastUsedCamera: true,
+              supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+              formatsToSupport: formats,
+              experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
+              }
+            },
+            onScanSuccess,
+            () => {}
+          );
 
-  $("startButton").onclick = startCamera;
+          state.cameraRunning = true;
+          state.torchOn = false;
+          setLiveBadge("Live", "live");
+          setStatus("Camera running", "Ready for next barcode");
+          setResultPill("Scanning", "neutral");
+          updateButtonStates();
+          showToast("Camera started.", "success");
+        } catch (err) {
+          console.error(err);
+          setLiveBadge("Error", "error");
+          setStatus("Camera error", err.message || "Could not start camera");
+          showToast(err.message || "Could not start camera.", "error");
+        }
+      }
 
-  if (!cameraRunning) {
-    $("startButton").textContent = "Start Camera";
-    startCamera();
-    return;
-  }
+      async function stopCamera() {
+        if (!state.cameraRunning || !state.html5QrCode) return;
+        try {
+          await state.html5QrCode.stop();
+          await state.html5QrCode.clear();
+        } catch (e) {
+          console.error(e);
+        } finally {
+          state.cameraRunning = false;
+          state.torchOn = false;
+          state.html5QrCode = null;
+          setLiveBadge("Idle", "idle");
+          setStatus("Camera stopped", "Tap Start Camera to resume");
+          setResultPill("Waiting", "neutral");
+          updateButtonStates();
+        }
+      }
 
-  $("startButton").textContent = "Camera Running";
-  $("startButton").disabled = true;
+      function updateButtonStates() {
+        els.startBtn.classList.toggle("active", state.cameraRunning);
+        els.startBtn.textContent = state.cameraRunning ? "Camera Running" : "Start Camera";
+        els.soundBtn.textContent = state.soundOn ? "🔊 Sound On" : "🔇 Sound Off";
+        els.soundBtn.classList.toggle("active", state.soundOn);
+        els.torchBtn.classList.toggle("active", state.torchOn);
+        els.torchBtn.textContent = state.torchOn ? "Flashlight On" : "Flashlight";
+      }
 
-  shell.classList.remove("detected", "accepted");
+      function toggleSound() {
+        state.soundOn = !state.soundOn;
+        updateButtonStates();
+      }
 
-  scanArmed = true;
+      async function toggleTorch() {
+        if (!state.cameraRunning) {
+          showToast("Start the camera first.", "error");
+          return;
+        }
 
-  showStatus(
-    "ready",
-    "Scanner Active",
-    "Ready to scan the next USPS label."
-  );
+        try {
+          const video = document.querySelector("#reader video");
+          if (!video || !video.srcObject) {
+            throw new Error("Video stream not available.");
+          }
 
-  startHints();
-}
+          const track = video.srcObject.getVideoTracks()[0];
+          if (!track) {
+            throw new Error("Camera track not available.");
+          }
 
+          const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+          if (!capabilities.torch) {
+            showToast("Flashlight not supported on this device.", "error");
+            return;
+          }
 
-/****************************************************
- VISIBILITY
+          state.torchOn = !state.torchOn;
+          await track.applyConstraints({
+            advanced: [{ torch: state.torchOn }]
+          });
 
- Release the camera if the page is backgrounded.
- Do not cancel an in-flight save request.
-****************************************************/
+          updateButtonStates();
+        } catch (err) {
+          console.error(err);
+          showToast("Could not change flashlight setting.", "error");
+        }
+      }
 
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    stopCamera();
-  }
-});
+      async function onScanSuccess(decodedText) {
+        const raw = (decodedText || "").trim();
+        const barcode = normalizeBarcode(raw);
 
+        if (!barcode) return;
 
-/****************************************************
- INITIAL STATE
-****************************************************/
+        const now = Date.now();
+        if (
+          barcode === state.lastScanValue &&
+          now - state.lastScanAt < CONFIG.SCAN_COOLDOWN_MS
+        ) {
+          return;
+        }
 
-updateCounter();
-showHint(DEFAULT_HINT);
+        if (state.processing) {
+          return;
+        }
 
-$("torchButton").disabled = true;
+        state.lastScanValue = barcode;
+        state.lastScanAt = now;
+        state.processing = true;
 
-showStatus(
-  "ready",
-  "Ready to Scan",
-  "Enter your access code and start the camera."
-);
+        state.totalScans += 1;
+        refreshStats();
+        flashSuccessFrame();
+        playBeep(980, 0.08);
 
-</script>
+        els.lastBarcode.textContent = barcode;
+        setLiveBadge("Saving", "busy");
+        setResultPill("Saving scan", "busy");
+        setStatus("Barcode recognized", "Saving scan...");
+        els.overlayStatus.textContent = "Barcode recognized — saving scan...";
+
+        try {
+          const result = await submitBarcode(barcode);
+
+          const isSuccess = result.ok !== false;
+          const statusText = result.status || (isSuccess ? "Accepted" : "Failed");
+          const message = result.message || (isSuccess ? "Scan saved." : "Scan failed.");
+
+          if (isSuccess) {
+            state.accepted += 1;
+            refreshStats();
+            setLiveBadge("Live", "live");
+            setResultPill(statusText, "success");
+            setStatus(statusText, message);
+            els.overlayStatus.textContent = "Scan accepted — ready for next package";
+            els.lastResult.textContent = `${statusText} — ${message}`;
+            showToast(message, "success");
+            playBeep(1180, 0.09);
+            autoCollapseAccess();
+          } else {
+            setLiveBadge("Error", "error");
+            setResultPill(statusText, "error");
+            setStatus(statusText, message);
+            els.overlayStatus.textContent = "Scan failed — ready to rescan";
+            els.lastResult.textContent = `${statusText} — ${message}`;
+            showToast(message, "error");
+            playBeep(320, 0.14);
+          }
+        } catch (err) {
+          console.error(err);
+          setLiveBadge("Error", "error");
+          setResultPill("Connection Error", "error");
+          setStatus("Connection error", err.message || "Could not save scan");
+          els.overlayStatus.textContent = "Connection error — ready to rescan";
+          els.lastResult.textContent = err.message || "Could not save scan";
+          showToast(err.message || "Could not save scan.", "error");
+          playBeep(320, 0.14);
+        } finally {
+          state.processing = false;
+          if (state.cameraRunning) {
+            setTimeout(() => {
+              if (!state.processing) {
+                setLiveBadge("Live", "live");
+                els.overlayStatus.textContent = "Ready to scan";
+              }
+            }, 800);
+          }
+        }
+      }
+
+      async function submitBarcode(barcode) {
+        const accessCode = getAccessCode();
+        if (!accessCode) {
+          return {
+            ok: false,
+            status: "ACCESS CODE REQUIRED",
+            message: "Please save the warehouse access code."
+          };
+        }
+
+        if (!CONFIG.WORKER_URL || CONFIG.WORKER_URL.includes("PASTE")) {
+          throw new Error("Worker URL is not configured.");
+        }
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), CONFIG.PROCESS_TIMEOUT_MS);
+
+        try {
+          const response = await fetch(CONFIG.WORKER_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              barcode,
+              accessCode,
+              source: "warehouse-scanner-v2.2",
+              userAgent: navigator.userAgent,
+              scannedAt: new Date().toISOString()
+            }),
+            signal: controller.signal
+          });
+
+          let data = {};
+          try {
+            data = await response.json();
+          } catch (e) {
+            data = {
+              ok: response.ok,
+              status: response.ok ? "ACCEPTED" : "ERROR",
+              message: response.ok ? "Scan saved." : "Unexpected response."
+            };
+          }
+
+          if (!response.ok && data.ok !== true) {
+            return {
+              ok: false,
+              status: data.status || "ERROR",
+              message: data.message || "Request failed."
+            };
+          }
+
+          return {
+            ok: data.ok !== false,
+            status: data.status || "QUEUED IN LOOP",
+            message: data.message || "Processing request accepted by Loop."
+          };
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+
+      function getAccessCode() {
+        return (els.accessCode.value || localStorage.getItem("warehouseAccessCode") || "").trim();
+      }
+
+      function normalizeBarcode(value) {
+        return String(value || "")
+          .replace(/\s+/g, "")
+          .replace(/[^\w-]/g, "");
+      }
+
+      function refreshStats() {
+        els.acceptedCount.textContent = String(state.accepted);
+        els.scanCount.textContent = String(state.totalScans);
+      }
+
+      function setLiveBadge(text, mode) {
+        els.liveBadge.textContent = text;
+        els.liveBadge.className = "live-badge";
+        if (mode === "live") els.liveBadge.classList.add("live");
+        if (mode === "busy") els.liveBadge.classList.add("busy");
+        if (mode === "error") els.liveBadge.classList.add("error");
+      }
+
+      function setResultPill(text, mode) {
+        els.resultPill.textContent = text;
+        els.resultPill.className = "result-pill";
+        if (mode === "success") els.resultPill.classList.add("success");
+        if (mode === "error") els.resultPill.classList.add("error");
+        if (mode === "busy") els.resultPill.classList.add("busy");
+      }
+
+      function setStatus(main, hint) {
+        els.statusText.textContent = main;
+        els.statusHint.textContent = hint || "";
+      }
+
+      function flashSuccessFrame() {
+        els.scanFlash.classList.add("show");
+        setTimeout(() => els.scanFlash.classList.remove("show"), 180);
+      }
+
+      function showToast(message, type) {
+        els.toast.textContent = message;
+        els.toast.className = "toast show";
+        if (type === "success") els.toast.classList.add("success");
+        if (type === "error") els.toast.classList.add("error");
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(() => {
+          els.toast.className = "toast";
+        }, 2200);
+      }
+
+      function autoCollapseAccess() {
+        if (!state.accessCollapsed) {
+          state.accessCollapsed = true;
+          els.accessBody.classList.add("hidden");
+          els.toggleAccessBtn.textContent = "Expand";
+        }
+      }
+
+      function playBeep(frequency = 960, duration = 0.08) {
+        if (!state.soundOn) return;
+
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+
+          const ctx = new AudioContextClass();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = "sine";
+          osc.frequency.value = frequency;
+          gain.gain.value = 0.0001;
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          const now = ctx.currentTime;
+          gain.gain.exponentialRampToValueAtTime(0.09, now + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+          osc.start(now);
+          osc.stop(now + duration + 0.02);
+
+          osc.onended = () => ctx.close().catch(() => {});
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    });
+  </script>
 </body>
 </html>
